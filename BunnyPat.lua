@@ -30,33 +30,14 @@ local playerEvents = {
   }, -- Runs every tick you are being patted
   oncePat = {
     function(entity) -- Each time someone pats you
-      local ent = entity:getTargetedEntity()
-      local pos = vec(0, 0, 0)
-      if ent then
-        pos = ent:getPos()
-      else
-        pos = entity:getTargetedBlock():getPos()
-      end
-
-      if pats % 40 == 0 then
-        modelScale = modelScale + 0.05
-        pings.setScale(modelScale)
-        avatar:store("patpat.boundingBox", player:getBoundingBox() * modelScale)
-        local playerPos = player:getPos()
-        for i = 1, 60 do
-          particles:newParticle("happy_villager", playerPos + (vec(math.random() - 0.5, math.random() * 2, math.random() - 0.5) * modelScale))
-        end
-      end
-
-      sounds:playSound("entity.rabbit.ambient", pos, 10, 0.9, false)
     end
   }
 }
 local config = {
   patpatHoldTime = 3, -- Amount of time before pats when holding down right click
-  unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
+  unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
   holdTime = 10, -- The amount of time before you stop being patted
-  noOffset = true -- Don't offest by player pos. useful for laggy networks
+  noOffset = false -- Don't offest by player pos. useful for laggy networks
 }
 local lib = {}
 
