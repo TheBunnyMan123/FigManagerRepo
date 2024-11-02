@@ -450,8 +450,9 @@ BunnyChatUtils:register(function(self, jsonText, rawText)
   for _, v in ipairs(tmstmp) do
     table.insert(newTxt, v)
   end
-
-  table.insert(newTxt, jsonText)
+  for _, v in ipairs(jsonText[1] and jsonText or {jsonText}) do
+    table.insert(newTxt, v)
+  end
 
   return newTxt, rawText
 end, "BUILTIN.TIMESTAMPS")
