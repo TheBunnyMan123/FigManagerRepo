@@ -10,12 +10,14 @@
     "BunnyLineLib": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyLineLib.lua",
     "BunnyPat": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyPat.lua",
     "BunnyPlate": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyPlate.lua",
+    "BunnyInteractions": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyInteractions.lua",
     "BunnyUI": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyUI.lua",
     "LibEntity": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/LibEntity.lua"
     "ExampleAssetInSubDirectoryThisAlsoWorksForLibraries/Asset.svg": "https://codeberg.org/TheBunnyMan123/Gallifreyan/raw/branch/master/TheKillerBunny.svg"
     "TheKillerBunny-All": {
         "bundle": [
             "ActionWheelPlusPlus",
+            "BunnyInteractions",
             "BunnyAsync",
             "BunnyChatUtils",
             "BunnyLineLib",
