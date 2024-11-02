@@ -133,7 +133,7 @@ return function(steps, col1, col2, ...)
     table.remove(compose, 1)
     if badgeIter == 0 then
       local txt = compose[1].text
-      while txt ~= "\n" do
+      while txt ~= "\n" and not perm do
         txt = compose[1] and compose[1].text or "\n"
         table.remove(compose, 1)
       end
@@ -141,6 +141,15 @@ return function(steps, col1, col2, ...)
 
     local scale = ((nameplate.ENTITY:getScale() or 1) * 0.4)
     if type(scale) == "number" then scale = vec(scale, scale, scale) end
+
+    avatar:setColor(genGradient[nameTick])
+    avatar:setColor(genGradient[nameTick], "dev")
+    avatar:setColor(genGradient[nameTick], "donator")
+    avatar:setColor(genGradient[nameTick], "contest")
+    avatar:setColor(genGradient[nameTick], "translator")
+    avatar:setColor(genGradient[nameTick], "immortalized")
+    avatar:setColor(genGradient[nameTick], "discord_staff")
+    avatar:setColor(genGradient[nameTick], "texture_artist")
 
     nameHolder:setPivot(((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy():sub(0, (client.getTextHeight(toJson(compose))/2)*scale.y))
     nameTask

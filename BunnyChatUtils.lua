@@ -339,6 +339,12 @@ BunnyChatUtils:register(function(self, jsonText, rawText)
     end
   end
 
+  local _, count = rawText:gsub("\n", "\n")
+
+  if count > 15 then
+    return {{text = "Message with more than 15 newlines (" .. count .. ") filtered.", color = "red"}}, "Message with more than 20 new lines filtered."
+  end
+
   self.__VARS["prevText"] = rawText
   self.__VARS["messageCount"] = 1
   return jsonText, rawText
