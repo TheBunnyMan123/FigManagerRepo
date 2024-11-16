@@ -31,9 +31,8 @@ function events.WORLD_RENDER()
     for i, v in pairs(forpairsList) do
       v.func(v.key, v.value)
       local key, value = next(v.table, v.key)
-
-      if not key then
-        forpairsList[i] = nil
+      if not value then
+        table.remove(forpairsList, i)
       end
       v.key = key
       v.value = value

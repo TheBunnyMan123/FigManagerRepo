@@ -42,6 +42,8 @@ return function(steps, col1, col2, ...)
   local nameTask = nameHolder:newText("TEXT")
   local plateCache = {}
 
+  local hoverJson = {}
+
   local text = ""
   local permissionText = ""
   local extraText = ""
@@ -52,11 +54,13 @@ return function(steps, col1, col2, ...)
 
   local genGradient = gradient(steps, col1, col2, ...)
 
+  local tick = 0
+  function events.WORLD_TICK() tick = tick + 1 end
+
   local perm
   function events.RENDER(_, ctx)
-    if ctx == "FIGURA_GUI" then perm = true end
+    if ctx == "FIGURA_GUI" then perm = tick end
   end
-
 
   local nameTick = 0
   local oldTick = 0
@@ -71,7 +75,6 @@ return function(steps, col1, col2, ...)
   function events.WORLD_TICK()
     local compose = {{text = "${badges}"}}
     nameTick = ((nameTick + 1) % (#genGradient - 1)) + 1
-
     local badgeIter = 0
     for _, v in pairs(customBadges) do
       if v.text ~= "" then
@@ -87,7 +90,7 @@ return function(steps, col1, col2, ...)
       })
     end
 
-    if not perm then
+    if ((perm or 0) < tick - 2) then
       table.insert(compose, {text = "\n", font = "default"})
     else
       table.insert(compose, {text = " ", font = "default"})
@@ -99,7 +102,11 @@ return function(steps, col1, col2, ...)
         table.insert(compose, {
           text = s,
           color = colorToHex(genGradient[((nameTick + iter) % (#genGradient - 1)) + 1]),
-          font = "default"
+          font = "default",
+          hoverEvent = {
+            action = "show_text",
+            value = hoverJson
+          }
         })
 
         iter = iter + 1
@@ -169,7 +176,8 @@ return function(steps, col1, col2, ...)
     setExtra = function(txt) extraText = txt end,
     setPermissionText = function(txt) permissionText = txt end,
     setGradient = function(tbl) genGradient = tbl end,
-    getGradient = function() return genGradient end
+    getGradient = function() return genGradient end,
+    setHoverJson = function(tbl) hoverJson = tbl end,
   }
 end
 
