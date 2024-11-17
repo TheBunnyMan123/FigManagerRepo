@@ -3,7 +3,7 @@ local libs = {}
 local colorCache = {}
 
 local function colorToHex(col)
-  if tostring(col):match("^#") then print(col);return col end
+  if tostring(col):match("^#") then return col end
 
   if not colorCache[tostring(col)] then
     colorCache[tostring(col)] = ("#" .. vectors.rgbToHex(col))
@@ -12,26 +12,37 @@ local function colorToHex(col)
   return colorCache[tostring(col)]
 end
 
+local function stepGradient(color1, color2, steps)
+  local colorDelta = (color2 - color1) / steps
+  local generatedSteps = {}
+
+  for i = 0, steps do
+    table.insert(generatedSteps, color1 + (colorDelta * i))
+  end
+
+  return generatedSteps
+end
+
 local function gradient(steps, col1, col2, ...)
   local cols = {
     col1,
     col2,
     ...
   }
-  steps = steps / #cols
-  local generated = {}
 
-  for k in pairs(cols) do
-    cols[k] = cols[k] / 255
-  end
+  local compose = {}
+  local generated = {}
 
   local prevCol = cols[#cols]
   for k, v in pairs(cols) do
-    local delta = (prevCol - v)
-    for i = 1, steps do
-      table.insert(generated, v + (delta / i))
+    for _, w in pairs(stepGradient(prevCol, v, steps)) do
+      table.insert(generated, w)
     end
     prevCol = v
+  end
+
+  for k in pairs(generated) do
+    generated[k] = generated[k] / 255
   end
 
   return generated
@@ -157,6 +168,10 @@ return function(steps, col1, col2, ...)
     avatar:setColor(genGradient[nameTick], "immortalized")
     avatar:setColor(genGradient[nameTick], "discord_staff")
     avatar:setColor(genGradient[nameTick], "texture_artist")
+    avatar:store("color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+    avatar:store("ears_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+    avatar:store("horn_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+    avatar:store("halo_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
 
     nameHolder:setPivot(((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy():sub(0, (client.getTextHeight(toJson(compose))/2)*scale.y))
     nameTask
