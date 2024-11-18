@@ -22,11 +22,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
-local gnui = require("GNUI.main")
+local path = string.gsub(..., "/", ".")
+local gnpath = string.gsub(path, "%..*$", ".") .. "GNamimates.GNUI"
+
+local gnui = require(gnpath .. ".main")
 local screen = gnui.getScreenCanvas()
-local button = require("GNUI.element.button")
-local slider = require("GNUI.element.slider")
-local textField = require("GNUI.element.textField")
+local button = require(gnpath .. ".element.button")
+local slider = require(gnpath .. ".element.slider")
+local textField = require(gnpath .. ".element.textField")
 
 ---@alias ActionWheelPlusPlus.numberFunc fun(number: integer, self: Action)
 ---@alias ActionWheelPlusPlus.textFunc fun(text: string, self: Action)
@@ -139,7 +142,6 @@ function lib.newText(self, name, func, default)
     :setSize(100, 13)
     :setPos(-110, 10 + (13 * self.iter))
     :setText(default)
-  new.TEXT_CHANGED:register(func)
   new.TEXT_CHANGED:register(function(txt)
     val = txt
   end)
