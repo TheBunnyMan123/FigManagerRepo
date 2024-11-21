@@ -13,6 +13,7 @@
     "BunnyInteractions": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyInteractions.lua",
     "BunnyUI": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyUI.lua",
     "LibEntity": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/LibEntity.lua"
+    "BunnyEasing": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyEasing.lua",
     "ExampleAssetInSubDirectoryThisAlsoWorksForLibraries/Asset.svg": "https://codeberg.org/TheBunnyMan123/Gallifreyan/raw/branch/master/TheKillerBunny.svg"
     "TheKillerBunny-All": {
         "bundle": [
@@ -24,7 +25,8 @@
             "BunnyPat",
             "BunnyUI",
             "LibEntity",
-            "BunnyPlate"
+            "BunnyPlate",
+            "BunnyEasing"
         ],
         "assets": [
             "ExampleAssetInSubDirectoryThisAlsoWorksForLibraries/Asset.svg"
