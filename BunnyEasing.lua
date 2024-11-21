@@ -40,9 +40,9 @@ function ease.quadInOut(maxTime, currentTime)
   maxTime = maxTime or 1
 
   if currentTime > (maxTime / 2) then
-    return quadOut(maxTime, currentTime, true)
+    return ease.quadOut(maxTime, currentTime, true)
   else
-    return quadIn(maxTime, currentTime, true)
+    return ease.quadIn(maxTime, currentTime, true)
   end
 end
 
@@ -70,9 +70,9 @@ function ease.cubicInOut(maxTime, currentTime)
   maxTime = maxTime or 1
 
   if currentTime > (maxTime / 2) then
-    return cubicIn(maxTime, currentTime, true)
+    return ease.cubicIn(maxTime, currentTime, true)
   else
-    return cubicIn(maxTime, currentTime, true)
+    return ease.cubicIn(maxTime, currentTime, true)
   end
 end
 
