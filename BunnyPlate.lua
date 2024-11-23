@@ -82,34 +82,10 @@ return function(steps, col1, col2, ...)
     end
   end
 
-  local cache = {}
-
   function events.WORLD_TICK()
     nameTick = ((nameTick + 1) % (#genGradient - 1)) + 1
-    if not cache[toJson(customBadges)] then
-      cache[toJson(customBadges)] = {}
-    end
-    if not cache[toJson(customBadges)][nameTick] then
-      cache[toJson(customBadges)][nameTick] = {}
-    end
-
     local scale = ((nameplate.ENTITY:getScale() or 1) * 0.4)
     if type(scale) == "number" then scale = vec(scale, scale, scale) end
-
-    if cache[toJson(customBadges)][nameTick].all then
-      nameplate.ALL:setText(cache[toJson(customBadges)][nameTick].all)
-      nameHolder:setPivot(((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy():sub(0, (client.getTextHeight(cache[toJson(customBadges)][nameTick].entity)/2)*scale.y))
-      nameTask
-      :setScale(scale)
-      :setPos(0, client.getTextHeight(toJson(compose)) / 2)
-      :setLight(nameplate.ENTITY:getLight())
-      :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
-      :setText(cache[toJson(customBadges)][nameTick].entity)
-      :setAlignment("CENTER")
-      :setOutline(true)
-
-      return
-    end
 
     local compose = {{text = "${badges}"}}
     local badgeIter = 0
@@ -143,7 +119,6 @@ return function(steps, col1, col2, ...)
     end)
 
     nameplate.ALL:setText(toJson(compose))
-    cache[toJson(customBadges)][nameTick].all = toJson(compose)
     nameplate.ENTITY:setVisible(false)
    
     local isJson, extraJson = pcall(parseJson, extraText)
@@ -196,8 +171,6 @@ return function(steps, col1, col2, ...)
     :setText(toJson(compose))
     :setAlignment("CENTER")
     :setOutline(true)
-
-    cache[toJson(customBadges)][nameTick].entity = toJson(compose)
   end
 
   return {
