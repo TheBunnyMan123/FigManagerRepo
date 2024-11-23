@@ -78,14 +78,40 @@ return function(steps, col1, col2, ...)
 
   function events.WORLD_RENDER()
     if oldTick ~= nameTick then
-      perm = false
       oldTick = nameTick
     end
   end
 
+  local cache = {}
+
   function events.WORLD_TICK()
-    local compose = {{text = "${badges}"}}
     nameTick = ((nameTick + 1) % (#genGradient - 1)) + 1
+    if not cache[toJson(customBadges)] then
+      cache[toJson(customBadges)] = {}
+    end
+    if not cache[toJson(customBadges)][nameTick] then
+      cache[toJson(customBadges)][nameTick] = {}
+    end
+
+    local scale = ((nameplate.ENTITY:getScale() or 1) * 0.4)
+    if type(scale) == "number" then scale = vec(scale, scale, scale) end
+
+    if cache[toJson(customBadges)][nameTick].all then
+      nameplate.ALL:setText(cache[toJson(customBadges)][nameTick].all)
+      nameHolder:setPivot(((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy():sub(0, (client.getTextHeight(cache[toJson(customBadges)][nameTick].entity)/2)*scale.y))
+      nameTask
+      :setScale(scale)
+      :setPos(0, client.getTextHeight(toJson(compose)) / 2)
+      :setLight(nameplate.ENTITY:getLight())
+      :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
+      :setText(cache[toJson(customBadges)][nameTick].entity)
+      :setAlignment("CENTER")
+      :setOutline(true)
+
+      return
+    end
+
+    local compose = {{text = "${badges}"}}
     local badgeIter = 0
     for _, v in pairs(customBadges) do
       if v.text ~= "" then
@@ -101,32 +127,23 @@ return function(steps, col1, col2, ...)
       })
     end
 
-    if ((perm or 0) < tick - 2) then
-      table.insert(compose, {text = "\n", font = "default"})
-    else
-      table.insert(compose, {text = " ", font = "default"})
-    end
+    local iter = 0
+    text:gsub("[\0-\x7F\xC2-\xFD][\x80-\xBF]*", function(s)
+      table.insert(compose, {
+        text = s,
+        color = colorToHex(genGradient[((nameTick + iter) % (#genGradient - 1)) + 1]),
+        font = "default",
+        hoverEvent = {
+          action = "show_text",
+          value = hoverJson
+        }
+      })
 
-    if not perm or (#permissionText == 0) then
-      local iter = 0
-      text:gsub("[\0-\x7F\xC2-\xFD][\x80-\xBF]*", function(s)
-        table.insert(compose, {
-          text = s,
-          color = colorToHex(genGradient[((nameTick + iter) % (#genGradient - 1)) + 1]),
-          font = "default",
-          hoverEvent = {
-            action = "show_text",
-            value = hoverJson
-          }
-        })
-
-        iter = iter + 1
-      end)
-    else
-      table.insert(compose, {text = permissionText, color = "#FFFFFF", font = "default"})
-    end
+      iter = iter + 1
+    end)
 
     nameplate.ALL:setText(toJson(compose))
+    cache[toJson(customBadges)][nameTick].all = toJson(compose)
     nameplate.ENTITY:setVisible(false)
    
     local isJson, extraJson = pcall(parseJson, extraText)
@@ -157,9 +174,6 @@ return function(steps, col1, col2, ...)
       end
     end
 
-    local scale = ((nameplate.ENTITY:getScale() or 1) * 0.4)
-    if type(scale) == "number" then scale = vec(scale, scale, scale) end
-
     avatar:setColor(genGradient[nameTick])
     avatar:setColor(genGradient[nameTick], "dev")
     avatar:setColor(genGradient[nameTick], "donator")
@@ -182,6 +196,8 @@ return function(steps, col1, col2, ...)
     :setText(toJson(compose))
     :setAlignment("CENTER")
     :setOutline(true)
+
+    cache[toJson(customBadges)][nameTick].entity = toJson(compose)
   end
 
   return {
@@ -190,7 +206,6 @@ return function(steps, col1, col2, ...)
     setCustomBadge = function(name, badge, font, hover) customBadges[name] = {text = badge, font = font, hover = hover} end,
     setExtra = function(txt) extraText = txt end,
     setPermissionText = function(txt) permissionText = txt end,
-    setGradient = function(tbl) genGradient = tbl end,
     getGradient = function() return genGradient end,
     setHoverJson = function(tbl) hoverJson = tbl end,
   }
