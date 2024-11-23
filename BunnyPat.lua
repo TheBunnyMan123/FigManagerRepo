@@ -152,7 +152,7 @@ local getTargetedBlock = function()
   local range = config.patRange
   
   if range <= 20 then
-    return player:getTargetedBlock(range, true)
+    return player:getTargetedBlock(true, range)
   end
 
   local start = player:getPos():add(0, player:getEyeHeight()):add(renderer:getEyeOffset())
