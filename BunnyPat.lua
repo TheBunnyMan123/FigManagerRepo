@@ -37,7 +37,8 @@ local config = {
   patpatHoldTime = 3, -- Amount of time before pats when holding down right click
   unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
   holdTime = 10, -- The amount of time before you stop being patted
-  noOffset = false -- Don't offest by player pos. useful for laggy networks
+  noOffset = false, -- Don't offest by player pos. useful for laggy networks
+  patRange = 10, -- Patpat range
 }
 local lib = {}
 
@@ -136,6 +137,29 @@ function pings.clearId()
   avatar:store("bunnypat.id", "")
 end
 
+local getTargetedEntity = function()
+  local range = config.patRange
+  
+  if range <= 20 then
+    return player:getTargetedEntity(range)
+  end
+
+  local start = player:getPos():add(0, player:getEyeHeight()):add(renderer:getEyeOffset())
+
+  return raycast:entity(start, start + (player:getLookDir() * range))
+end
+local getTargetedBlock = function()
+  local range = config.patRange
+  
+  if range <= 20 then
+    return player:getTargetedBlock(range, true)
+  end
+
+  local start = player:getPos():add(0, player:getEyeHeight()):add(renderer:getEyeOffset())
+
+  return raycast:block(start, start + (player:getLookDir() * range))
+end
+
 function events.TICK()
   if not player:isSwingingArm() and not host:isHost() then
     avatar:store("bunnypat.id", "")
@@ -172,8 +196,8 @@ function events.TICK()
   end
 
   lastPat = tick
-  local target = player:getTargetedEntity(20)
-  local blockTarget = player:getTargetedBlock(true, 20)
+  local target = getTargetedEntity(1000)
+  local blockTarget = getTargetedBlock(1000)
 
   if target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false then
     pings.pat(client.uuidToIntArray(target:getUUID()))
