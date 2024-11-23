@@ -50,7 +50,7 @@ end
 
 return function(steps, col1, col2, ...)
   local nameHolder = models:newPart("TKBunny$NameplateTask"):newPart("HOLDER", "CAMERA")
-  local nameTask = nameHolder:newText("TEXT")
+  local nameTask = nameHolder:newText("TEXT"):setLight(15)
   local plateCache = {}
 
   local hoverJson = {}
@@ -186,7 +186,7 @@ return function(steps, col1, col2, ...)
 
   return {
     setText = function(txt) text = txt end,
-    setNameplateHolder = function(part) nameHolder=part;nameTask=part:newText("NAMEPLATE") end,
+    setNameplateHolder = function(part) nameHolder=part;nameTask=part:newText("NAMEPLATE"):setLight(15) end,
     setCustomBadge = function(name, badge, font, hover) customBadges[name] = {text = badge, font = font, hover = hover} end,
     setExtra = function(txt) extraText = txt end,
     setPermissionText = function(txt) permissionText = txt end,

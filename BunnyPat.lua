@@ -172,8 +172,8 @@ function events.TICK()
   end
 
   lastPat = tick
-  local target = player:getTargetedEntity(host:getReachDistance())
-  local blockTarget = player:getTargetedBlock(true, host:getReachDistance())
+  local target = player:getTargetedEntity(20)
+  local blockTarget = player:getTargetedBlock(true, 20)
 
   if target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false then
     pings.pat(client.uuidToIntArray(target:getUUID()))

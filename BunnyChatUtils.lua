@@ -41,228 +41,165 @@ function BunnyChatUtils.register(self, func, name, priority)
 end
 
 function BunnyChatUtils.formatMarkdown(s)
-  local msg = ""
+  s = type(s) == "string" and s or ""
+  local msg = string.gsub(s, "\\(.)", function(str)
+    return "§" .. string.byte(str) .. "§"
+  end)
 
-  if type(s) == "string" then
-    msg = s:gsub("%\\%*", "§asterisk§"):gsub("%\\%~", "§tilde§"):gsub("%\\%_", "§underscore§")
-  else
-    msg = s
+  msg = msg .. " "
 
-    local function iter(internalStr)
-      for k, v in pairs(internalStr) do
-        if type(v) == "string" then
-          v = BunnyChatUtils.formatMarkdown(v)
-        elseif type(v) == "table" then
-          v = iter(v)
-        end
+  local compose = {}
 
-        msg[k] = v
+  local italic = false
+  local bold = false
+  local link = false
+  local strikethrough = false
+  local underlined = false
+
+  local temp = ""
+  local ptr = 1
+
+  local function insert(tbl)
+    if link then
+      tbl.color = "aqua"
+      tbl.underlined = true
+
+      local text = tbl.text
+
+      local match1, match2 = text:match("^%[(.-)%]%((.-)%)")
+
+      if match2 then
+        tbl.text = match1
       end
 
-      return internalStr
-    end
+      if not match2 then match2 = text end
 
-    if msg.extra then
-      msg = iter(msg.extra)
+      tbl.clickEvent = {
+        action = "open_url",
+        value = match2
+      }
+      tbl.hoverEvent = {
+        action = "show_text",
+        value = {
+          text = match2,
+          color = "aqua",
+          underlined = true
+        }
+      }
+
+      table.insert(compose, tbl)
     else
-      msg = iter(msg)
-    end
-
-    return msg
-  end
-
-  local iter = 0
-  local astercount = 0
-  local undercount = 0
-  local tildecount = 0
-
-  for match in string.gmatch(msg, ".?%*") do
-    if not match:find("^%\\") then
-      astercount = astercount + 1
+      table.insert(compose, tbl)
     end
   end
 
-  for match in string.gmatch(msg, ".?%_%_") do
-    if not match:find("^%\\") then
-      undercount = undercount + 1
-    end
-  end
+  while #msg >= 1 do
+    local char = string.sub(msg, 1, 1)
+    local nextChar = string.sub(msg, 2, 2)
 
-  for match in string.gmatch(msg, ".?%~%~") do
-    if not match:find("^%\\") then
-      tildecount = tildecount + 1
-    end
-  end
+    local linkTxt
 
-  local boldInitialized = false
-  local function boldMarkdown(str)
-    if not boldInitialized then
-      iter = 0
-      boldInitialized = true
-    end
-
-    iter = iter + 1
-
-    if iter % 2 ~= 0 then
-      return "§+bold§"
-    else
-      return "§-bold§"
-    end
-  end
-
-  local italicInitialized = false
-  local function italicMarkdown(str)
-    if not italicInitialized then
-      iter = 0
-      italicInitialized = true
-    end
-
-    iter = iter + 1
-
-    if iter % 2 ~= 0 then
-      return "§+italic§"
-    else
-      return "§-italic§"
-    end
-  end
-
-  local ulineInitialized = false
-  local function ulineMarkdown(str)
-    if not ulineInitialized then
-      iter = 0
-      ulineInitialized = true
-    end
-
-    iter = iter + 1
-
-    if iter % 2 ~= 0 then
-      return "§+uline§"
-    else
-      return "§-uline§"
-    end
-  end
-
-  local sthroughInitialized = false
-  local function sthroughMarkdown(str)
-    if not sthroughInitialized then
-      iter = 0
-      sthroughInitialized = true
-    end
-
-    iter = iter + 1
-
-    if iter % 2 ~= 0 then
-      return "§+sthrough§"
-    else
-      return "§-sthrough§"
-    end
-  end
-
-
-  ---@diagnostic disable-next-line: param-type-mismatch
-  if astercount % 2 == 0 then
-    msg = string.gsub(msg, "%*%*", boldMarkdown)
-    msg = string.gsub(msg, "%*", italicMarkdown)
-  end
-
-  if tildecount % 2 == 0 then
-    msg = string.gsub(msg, "%_%_", ulineMarkdown)
-  end
-
-  if undercount % 2 == 0 then
-    msg = string.gsub(msg, "%~%~", sthroughMarkdown)
-  end
-
-  local bold, italic, uline, sthrough = false, false, false, false
-
-  local function markdownStuff(s1, s2)
-    local formatKey = s2:gsub("§", "")
-    local add = s2:match("%+")
-    formatKey = formatKey:gsub("[+-]", "")
-
-    local toPrepend = ""
-
-    if formatKey == "bold" then
-      if add then
-        bold = true
+    if char == "*" then
+      insert({
+        text = temp:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+        italic = italic,
+        bold = bold,
+        strikethrough = strikethrough,
+        underlined = underlined,
+        color = "white"
+      })
+      temp = ""
+      char = ""
+      if nextChar == "*" then
+        msg = msg:gsub("^..", "")
+        bold = not bold
       else
-        bold = false
-      end
-
-      if add then
-        if italic then toPrepend = toPrepend .. "§o" end
-        if uline then toPrepend = toPrepend .. "§n" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%+bold§", "§l" .. toPrepend, 1)
-      else
-        if italic then toPrepend = toPrepend .. "§o" end
-        if uline then toPrepend = toPrepend .. "§n" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%-bold§", "§r" .. toPrepend, 1)
-      end
-    elseif formatKey == "italic" then
-      if add then
-        italic = true
-      else
-        italic = false
-      end
-
-      if add then
-        if bold then toPrepend = toPrepend .. "§l" end
-
-        if uline then toPrepend = toPrepend .. "§n" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%+italic§", "§o" .. toPrepend, 1)
-      else
-        if bold then toPrepend = toPrepend .. "§l" end
-        if uline then toPrepend = toPrepend .. "§n" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%-italic§", "§r" .. toPrepend, 1)
-      end
-    elseif formatKey == "uline" then
-      if add then
-        uline = true
-      else
-        uline = false
-      end
-
-      if add then
-        if bold then toPrepend = toPrepend .. "§l" end
-        if italic then toPrepend = toPrepend .. "§o" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%+uline§", "§n" .. toPrepend, 1)
-      else
-        if bold then toPrepend = toPrepend .. "§l" end
-        if italic then toPrepend = toPrepend .. "§o" end
-        if sthrough then toPrepend = toPrepend .. "§m" end
-        msg = msg:gsub("§%-uline§", "§r" .. toPrepend, 1)
-      end
-    elseif formatKey == "sthrough" then
-      if add then
-        sthrough = true
-      else
-        sthrough = false
-      end
-
-      if add then
-        if bold then toPrepend = toPrepend .. "§l" end
-        if italic then toPrepend = toPrepend .. "§o" end
-        if uline then toPrepend = toPrepend .. "§n" end
-        msg = msg:gsub("§%+sthrough§", "§m" .. toPrepend, 1)
-      else
-        if bold then toPrepend = toPrepend .. "§l" end
-        if italic then toPrepend = toPrepend .. "§o" end
-        if uline then toPrepend = toPrepend .. "§n" end
-        msg = msg:gsub("§%-sthrough§", "§r" .. toPrepend, 1)
+        msg = msg:gsub("^.", "")
+        italic = not italic
       end
     end
+
+    if char == "_" and nextChar == "_" then
+      msg = msg:gsub("^..", "")
+      insert({
+        text = temp:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+        italic = italic,
+        bold = bold,
+        strikethrough = strikethrough,
+        underlined = underlined,
+        color = "white"
+      })
+      char = ""
+      temp = ""
+      underlined = not underlined
+    end
+
+    if char == "~" and nextChar == "~" then
+      msg = msg:gsub("^..", "")
+      insert({
+        text = temp:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+        italic = italic,
+        bold = bold,
+        strikethrough = strikethrough,
+        underlined = underlined,
+        color = "white"
+      })
+      char = ""
+      temp = ""
+      strikethrough = not strikethrough
+    end
+
+    linkTxt = msg:match("^%[.-%]%(.-%)")
+    if not linkTxt then linkTxt = msg:match("^(https?://.-) ") end
+    if linkTxt then
+      insert({
+        text = temp:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+        italic = italic,
+        bold = bold,
+        strikethrough = strikethrough,
+        underlined = underlined,
+        color = "white"
+      })
+      temp = ""
+      link = true
+      insert({
+        text = linkTxt:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+        italic = italic,
+        bold = bold,
+        strikethrough = strikethrough,
+        underlined = underlined,
+        color = "white"
+      })
+
+      link = false
+      char = ""
+    end
+
+    ptr = ptr + 1
+    if char == "" then ptr = ptr - 1 end
+
+    temp = temp .. char
+    if char ~= "" then
+      msg = msg:gsub("^.", "")
+    end
+
+    if linkTxt and msg:match("^%[.-%]%(.-%)") then
+      msg = msg:gsub("^%[.-%]%(.-%)", "")
+    elseif linkTxt then
+      msg = msg:gsub("^https?://.- ", " ")
+    end
   end
 
-  for st in string.gmatch(msg, "§[%+%-][a-z]-§") do
-    markdownStuff(msg, st)
-  end
+  insert({
+    text = temp:gsub("§(%d-)§", function(s) return (not string.char(s):match("[%*%[%]%(%)%~%_]") and "\\" or "") .. string.char(tonumber(s)) end),
+    italic = italic,
+    bold = bold,
+    strikethrough = strikethrough,
+    underlined = underlined,
+    color = "white"
+  })
 
-  return msg:gsub("§asterisk§", "*"):gsub("§tilde§", "~"):gsub("§underscore§", "_")
+  return compose
 end
 
 ---@param self BunnyChatUtils
@@ -308,9 +245,7 @@ BunnyChatUtils:register(function(self, jsonText, rawText)
 
   if rawText:gsub("%s*$", "") == self.__VARS["prevText"]:gsub("%s*$", "") then
     self.__VARS["messageCount"] = self.__VARS["messageCount"] + 1
-    -- print(jsonText.with)
     host:setChatMessage(1, nil)
-    -- if jsonText.extra then
     if jsonText.extra then
       table.insert(jsonText.extra, { text = " (", color = "dark_gray" })
       table.insert(jsonText.extra, { text = "x", color = "gray" })
@@ -341,26 +276,14 @@ BunnyChatUtils:register(function(self, jsonText, rawText)
 
   local _, count = rawText:gsub("\n", "\n")
 
-  if count > 15 then
-    return {{text = "Message with more than 15 newlines (" .. count .. ") filtered.", color = "red"}}, "Message with more than 20 new lines filtered."
+  if count > 50 then
+    return {{text = "Message with more than 50 newlines (" .. count .. ") filtered.", color = "red"}}, "Message with more than 20 new lines filtered."
   end
 
   self.__VARS["prevText"] = rawText
   self.__VARS["messageCount"] = 1
   return jsonText, rawText
 end, "BUILTIN.FILTER_SPAM", 5)
-
-BunnyChatUtils:register(function(self, jsonText, rawText)
-  if jsonText[#jsonText] and jsonText[#jsonText].text and tostring(jsonText[#jsonText].text):match("^https?://%S+$") then
-    local link = jsonText[#jsonText].text
-    jsonText[#jsonText].clickEvent = {
-      action = "open_url",
-      value = link
-    }
-    jsonText[#jsonText].color = "aqua"
-  end
-  return jsonText, rawText
-end, "BUILTIN.LINKS", 2)
 
 BunnyChatUtils:register(function(self, jsonText, rawText)
   if jsonText[#jsonText] and jsonText[#jsonText].text then
@@ -548,12 +471,70 @@ BunnyChatUtils:register(function(_, chatJson, rawText)
   return chatJson, rawText
 end, "BUILTIN.JOIN", 1)
 
+BunnyChatUtils:register(function(_, chatJson, rawText)
+  local sender, content = rawText:match("^%[Discord%] (.-) » (.*)$")
+  if not sender or not content then return chatJson, rawText end
+
+  sender = sender:gsub("»", ""):gsub("%s*$", "")
+
+  chatJson = {
+    translate = "chat.type.text",
+    with = {
+      {
+        {
+          text = "[",
+          color = "gray"
+        },
+        {
+          text = "DISCORD",
+          color = "#7289DA"
+        },
+        {
+          text = "] ",
+          color = "gray"
+        },
+        {
+          text = sender,
+          color = "white"
+        }
+      },
+      {
+        text = content,
+        color = "white"
+      }
+    }
+  }
+  rawText = string.format("<%s> %s", sender, content)
+
+  return chatJson, rawText
+end, "BUILTIN.PLAZA_DISCORD_TRANSLATION", 1)
+
 BunnyChatUtils:register(function(self, chatJson, rawText)
+  if chatJson.extra and chatJson.extra[1] and chatJson.extra[1].translate == "chat.type.text" then
+    cJson = chatJson
+    chatJson = {
+      translate = "chat.type.text",
+      with = {
+        cJson.extra[1].with,
+        {
+          text = table.concat({
+            cJson.extra[2].text,
+            table.unpack(cJson.extra[2].extra or {})
+          }, "")
+        }
+      }
+    }
+  end
+
   if chatJson.translate then
     if chatJson.translate == "chat.type.text" then
       local plr = chatJson.with[1]
 
-      local msg = self.formatMarkdown(chatJson.with[2])
+      local toAppend = ""
+      for _, v in pairs(chatJson.with[2].extra or {}) do
+        toAppend = toAppend .. (v.text or v) .. " "
+      end
+      local msg = self.formatMarkdown((chatJson.with[2].text or chatJson.with[2]) .. toAppend)
 
       if plr.insertion then
         chatMessageList[plr.insertion] = {
@@ -571,16 +552,11 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
         chatJson = {
           plr,
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
-          ((type(msg) == "table" and msg) or 
-          {
-            text = msg,
-            color = "white",
-            bold = false,
-          } or msg)
+          table.unpack(msg)
         } --[[@as TextJsonComponent]]
       else
         chatJson = {
@@ -590,16 +566,11 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
             bold = false,
           },
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
-          ((type(msg) == "table" and msg) or 
-          {
-            text = msg,
-            color = "white",
-            bold = false,
-          } or msg)
+          table.unpack(msg)
         } --[[@as TextJsonComponent]]
       end
     end
@@ -610,7 +581,7 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
   ::done::
 
   return chatJson, rawText
-end, "BUILTIN.USERNAMEFORMAT", 1)
+end, "BUILTIN.USERNAMEFORMAT", 2)
 
 BunnyChatUtils:register(function(self, chatJson, rawText)
   if chatJson.translate then
@@ -619,7 +590,11 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
 
       local plr = chatJson.with[2]
 
-      local msg = self.formatMarkdown(chatJson.with[3])
+      local toAppend = ""
+      for _, v in pairs(chatJson.with[3].extra or {}) do
+        toAppend = toAppend .. (v.text or v) .. " "
+      end
+      local msg = self.formatMarkdown((chatJson.with[3].text or chatJson.with[3]) .. toAppend)
 
       dispName[1].hoverEvent = {
         action = "show_text",
@@ -663,21 +638,17 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
             bold = false,
           },
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
           plr,
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
-          {
-            text = msg,
-            color = "white",
-            bold = false,
-          },
+          table.unpack(msg)
         } --[[@as TextJsonComponent]]
       else
         chatJson = {
@@ -687,15 +658,11 @@ BunnyChatUtils:register(function(self, chatJson, rawText)
             bold = false,
           },
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
-          {
-            text = msg,
-            color = "white",
-            bold = false,
-          },
+          table.unpack(msg)
         } --[[@as TextJsonComponent]]
       end
     end
@@ -744,7 +711,7 @@ BunnyChatUtils:register(function(_, chatJson, rawText)
             bold = false,
           },
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
@@ -801,7 +768,7 @@ BunnyChatUtils:register(function(_, chatJson, rawText)
             bold = false,
           },
           {
-            text = " >> ",
+            text = " » ",
             color = "gray",
             bold = true,
           },
@@ -975,27 +942,5 @@ events.CHAT_RECEIVE_MESSAGE:register(function(rawText, jsonText)
 
   return toJson(final)
 end)
-
-local modelWorld = models:newPart("TKBunnyChatUtilsWorld", "WORLD")
-function events.world_render(delta)
-  players = world:getPlayers()
-
-  for k, v in pairs(chatMessageList) do
-    if not players[k] then
-      chatMessageList[k] = nil
-      ---@diagnostic disable-next-line: discard-returns
-      modelWorld:newText((type(k) == "table" and k.text) or k)
-      goto continue
-    end
-
-    if not (v.timestamp + (4*1000) <= client:getSystemTime()) then
-      modelWorld:newText(k):text(v.message):setPos((players[k]:getPos(delta) + vec(0, 2.5, 0)) * 16):setAlignment("CENTER"):scale(0.3):setRot(client:getCameraRot() - 180):setBackgroundColor()
-    else
-      ---@diagnostic disable-next-line: discard-returns
-      modelWorld:newText(k)
-    end
-    ::continue::
-  end
-end
 
 return BunnyChatUtils
