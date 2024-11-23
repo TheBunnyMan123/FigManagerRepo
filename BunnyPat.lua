@@ -146,7 +146,7 @@ local getTargetedEntity = function()
 
   local start = player:getPos():add(0, player:getEyeHeight()):add(renderer:getEyeOffset())
 
-  return raycast:entity(start, start + (player:getLookDir() * range))
+  return raycast:entity(start, start + (player:getLookDir() * range), function(e) return e~=player end)
 end
 local getTargetedBlock = function()
   local range = config.patRange
