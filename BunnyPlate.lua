@@ -87,6 +87,40 @@ return function(steps, col1, col2, ...)
     local scale = ((nameplate.ENTITY:getScale() or 1) * 0.4)
     if type(scale) == "number" then scale = vec(scale, scale, scale) end
 
+    local cacheIndex = toJson(customBadges)..toJson(extraText)
+    plateCache[cacheIndex] = plateCache[cacheIndex] or {}
+    plateCache[cacheIndex][nameTick] = plateCache[cacheIndex][nameTick] or {}
+
+    if plateCache[cacheIndex][nameTick].plate then
+      nameplate.ALL:setText(plateCache[cacheIndex][nameTick].plate)
+      
+      avatar:setColor(genGradient[nameTick])
+      avatar:setColor(genGradient[nameTick], "dev")
+      avatar:setColor(genGradient[nameTick], "donator")
+      avatar:setColor(genGradient[nameTick], "contest")
+      avatar:setColor(genGradient[nameTick], "translator")
+      avatar:setColor(genGradient[nameTick], "immortalized")
+      avatar:setColor(genGradient[nameTick], "discord_staff")
+      avatar:setColor(genGradient[nameTick], "texture_artist")
+      avatar:store("color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+      avatar:store("ears_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+      avatar:store("horn_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+      avatar:store("halo_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+
+      local pivot = ((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy()
+      local height = scale.y*client.getTextHeight(plateCache[cacheIndex][nameTick].entity)
+
+      nameHolder:setPivot(pivot:add(0, height+2))
+      nameTask
+      :setScale(scale)
+      :setLight(nameplate.ENTITY:getLight())
+      :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
+      :setText(plateCache[cacheIndex][nameTick].entity)
+      :setAlignment("CENTER")
+      :setOutline(true)
+      return
+    end
+
     local compose = {{text = "${badges}"}}
     local badgeIter = 0
     for _, v in pairs(customBadges) do
@@ -123,6 +157,7 @@ return function(steps, col1, col2, ...)
       iter = iter + 1
     end)
 
+    plateCache[cacheIndex][nameTick].plate = toJson(compose)
     nameplate.ALL:setText(toJson(compose))
     nameplate.ENTITY:setVisible(false)
    
@@ -153,8 +188,6 @@ return function(steps, col1, col2, ...)
       end
     end
 
-    table.remove(compose, 1)
-    
     avatar:setColor(genGradient[nameTick])
     avatar:setColor(genGradient[nameTick], "dev")
     avatar:setColor(genGradient[nameTick], "donator")
@@ -171,12 +204,13 @@ return function(steps, col1, col2, ...)
     local pivot = ((nameplate.ENTITY:getPivot() or vec(0, 2, 0))*16):copy()
     local height = scale.y*client.getTextHeight(toJson(compose))
 
+    plateCache[cacheIndex][nameTick].entity = toJson(compose):gsub("${badges}", "")
     nameHolder:setPivot(pivot:add(0, height+2))
     nameTask
     :setScale(scale)
     :setLight(nameplate.ENTITY:getLight())
     :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
-    :setText(toJson(compose))
+    :setText(toJson(compose):gsub("${badges}", ""))
     :setAlignment("CENTER")
     :setOutline(true)
   end
