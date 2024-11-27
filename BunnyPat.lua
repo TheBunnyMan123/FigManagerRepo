@@ -14,43 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 --]]
 
+local eventLib = require(....."/BunnyEventLib")
+local patEvents = eventLib.newEvents()
+patEvents.onPat = eventLib.newEvent() -- Runs when you start being patted
+patEvents.onUnpat = eventLib.newEvent() -- Runs when you stop being patted
+patEvents.togglePat = eventLib.newEvent() -- Runs when you start or stop being patted
+patEvents.whilePat = eventLib.newEvent() -- Runs every tick you are being patted
+patEvents.oncePat = eventLib.newEvent() -- Runs each time someone pats you
+
 local pats = 0
-local playerEvents = {
-  onPat = {
-    function() end
-  }, -- Runs when you start being patted
-  onUnpat = {
-    function() end
-  }, -- Runs when you stop being patted
-  togglePat = {
-    function(isPatted) end
-  }, -- Runs when you start or stop being patted
-  whilePat = {
-    function(patters) end
-  }, -- Runs every tick you are being patted
-  oncePat = {
-    function(entity) -- Each time someone pats you
-    end
-  }
-}
 local config = {
   patpatHoldTime = 3, -- Amount of time before pats when holding down right click
-  unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
+  unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
   holdTime = 10, -- The amount of time before you stop being patted
   noOffset = false, -- Don't offest by player pos. useful for laggy networks
-  patRange = 10, -- Patpat range
+  patRange = 1000, -- Patpat range
 }
 local lib = {}
 
-local function call(event, ...)
-  for _, v in pairs(playerEvents[event]) do
-    v(...)
-  end
-end
-
 local myPatters = {}
 
-function pat(target, overrideBox, overridePos, id)
+local function pat(target, overrideBox, overridePos, id)
   if not player:isLoaded() then return end
   local targetInfo, noHearts
   if type(target) == "string" then
@@ -117,14 +101,14 @@ end
 local petpetFunc = function(uuid, timer)
   pats = pats + 1
   if not myPatters[uuid] then
-    call("onPat")
-    call("togglePat", true)
+    patEvents.onPat:invoke()
+    patEvents.togglePat:invoke(true)
   end
   myPatters[uuid] = math.clamp(timer, config.holdTime, 100)
 
   local entity = world.getEntity(uuid)
   if entity then
-    call("oncePat", entity)
+    patEvents.oncePat:invoke(entity)
   end
 end
 
@@ -168,8 +152,8 @@ function events.TICK()
   local patted = false
   for uuid, time in pairs(myPatters) do
     if time <= 0 then
-      call("onUnpat")
-      call("togglePat", false)
+      patEvents.onUnpat:invoke()
+      patEvents.togglePat:invoke(false)
       myPatters[uuid] = nil
     else
       myPatters[uuid] = time - 1
@@ -178,10 +162,10 @@ function events.TICK()
   end
 
   if patted then
-    call("whilePat", myPatters)
+    patEvents.whilePat:invoke(myPatters)
   end
 
-  if (not right:isPressed() or not player:isSwingingArm()) and player:getVariable("bunnypat.id") ~= "" then
+  if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
     pings.clearId()
   end
 
@@ -242,4 +226,6 @@ function events.TICK()
 end
 
 avatar:store("petpet", petpetFunc)
+
+return patEvents
 

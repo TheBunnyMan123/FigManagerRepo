@@ -7,9 +7,8 @@ local function mkReadOnly(tbl)
 end
 
 local eventMetatable = {
-  __registered = {},
   __newindex = function() return end,
-  __index = {},
+  __index = {__registered = {}},
   __type = "Event"
 }
 
@@ -54,35 +53,30 @@ eventMetatable.__index.fire = eventMetatable.__index.invoke
 eventMetatable = mkReadOnly(eventMetatable)
 
 local eventsMetatable = mkReadOnly {
-  __table = {},
-  __index = function(self, index)
-    return self.__table[index]
-  end,
   __newindex = function(self, index, value)
     if type(index) == "string" and type(value) == "function" and self.__table[index:upper()] and type(self.__table[index:upper()] == "Event") then
-      self.__table[index]:register(value)
+      self[index]:register(value)
     else
-      self.__table[index] = value
+      rawset(self, index, value)
     end
   end,
   __pairs = function(self)
-    return pairs(self._table)
+    return pairs(self)
   end,
   __ipairs = function(self)
-    return ipairs(self.__table)
+    return ipairs(self)
   end,
-  __len = function()
-    return #self.__table
+  __len = function(self)
+    return #self
   end,
   __type = "EventsAPI"
 }
 
 local lib = {}
 
-function lib.new()
+function lib.newEvent()
   return setmetatable({}, eventMetatable)
 end
-lib.newEvent = lib.new
 
 function lib.newEvents()
   return setmetatable({}, eventsMetatable)
