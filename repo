@@ -1,26 +1,26 @@
 {
   "ActionWheelPlusPlus": {
-    "url": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/ActionWheelPlusPlus.lua",
+    "url": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/ActionWheelPlusPlus.lua",
       "dependencies": [
         "GNUI"
       ]
   },
   "BunnyPat": {
-    "url": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyPat.lua",
+    "url": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyPat.lua",
     "dependencies": [
       "BunnyEventLib"
     ]
   },
-  "BunnyEventLib": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyEventLib.lua",
-  "BunnyUtils": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyUtils.lua",
-  "BunnyAsync": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/async.lua",
-  "BunnyChatUtils": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyChatUtils.lua",
-  "BunnyLineLib": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyLineLib.lua",
-  "BunnyPlate": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyPlate.lua",
-  "BunnyInteractions": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyInteractions.lua",
-  "BunnyUI": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyUI.lua",
-  "LibEntity": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/LibEntity.lua",
-  "BunnyEasing": "https://codeberg.org/TheBunnyMan123/FigManagerRepo/raw/branch/main/BunnyEasing.lua",
+  "BunnyEventLib": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyEventLib.lua",
+  "BunnyUtils": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyUtils.lua",
+  "BunnyAsync": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/async.lua",
+  "BunnyChatUtils": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyChatUtils.lua",
+  "BunnyLineLib": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyLineLib.lua",
+  "BunnyPlate": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyPlate.lua",
+  "BunnyInteractions": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyInteractions.lua",
+  "BunnyUI": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyUI.lua",
+  "LibEntity": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/LibEntity.lua",
+  "BunnyEasing": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyEasing.lua",
   "ExampleAssetInSubDirectoryThisAlsoWorksForLibraries/Asset.svg": "https://codeberg.org/TheBunnyMan123/Gallifreyan/raw/branch/master/TheKillerBunny.svg"
   "TheKillerBunny-All": {
     "bundle": [
