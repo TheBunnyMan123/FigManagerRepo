@@ -16,11 +16,11 @@ limitations under the License.
 
 local eventLib = require(....."/BunnyEventLib")
 local patEvents = eventLib.newEvents()
-patEvents.onPat = eventLib.newEvent() -- Runs when you start being patted
-patEvents.onUnpat = eventLib.newEvent() -- Runs when you stop being patted
-patEvents.togglePat = eventLib.newEvent() -- Runs when you start or stop being patted
-patEvents.whilePat = eventLib.newEvent() -- Runs every tick you are being patted
-patEvents.oncePat = eventLib.newEvent() -- Runs each time someone pats you
+patEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted
+patEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted
+patEvents.TOGGLE_PAT = eventLib.newEvent() -- Runs when you start or stop being patted
+patEvents.WHILE_PAT = eventLib.newEvent() -- Runs every tick you are being patted
+patEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you
 
 local pats = 0
 local config = {
@@ -101,14 +101,14 @@ end
 local petpetFunc = function(uuid, timer)
   pats = pats + 1
   if not myPatters[uuid] then
-    patEvents.onPat:invoke()
-    patEvents.togglePat:invoke(true)
+    patEvents.ON_PAT:invoke()
+    patEvents.TOGGLE_PAT:invoke(true)
   end
   myPatters[uuid] = math.clamp(timer, config.holdTime, 100)
 
   local entity = world.getEntity(uuid)
   if entity then
-    patEvents.oncePat:invoke(entity)
+    patEvents.ONCE_PAT:invoke(entity)
   end
 end
 
@@ -152,8 +152,8 @@ function events.TICK()
   local patted = false
   for uuid, time in pairs(myPatters) do
     if time <= 0 then
-      patEvents.onUnpat:invoke()
-      patEvents.togglePat:invoke(false)
+      patEvents.ON_UNPAT:invoke()
+      patEvents.TOGGLE_PAT:invoke(false)
       myPatters[uuid] = nil
     else
       myPatters[uuid] = time - 1
@@ -162,7 +162,7 @@ function events.TICK()
   end
 
   if patted then
-    patEvents.whilePat:invoke(myPatters)
+    patEvents.WHILE_PAT:invoke(myPatters)
   end
 
   if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
