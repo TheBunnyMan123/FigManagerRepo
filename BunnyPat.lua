@@ -24,11 +24,18 @@ patEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you
 
 local pats = 0
 local config = {
+  particle = require(....."/BunnyParticles").newParticle({
+    textures:fromVanilla("goldheart_2", "minecraft:textures/particle/goldheart_2.png"),
+    textures:fromVanilla("goldheart_1", "minecraft:textures/particle/goldheart_1.png"),
+    textures:fromVanilla("goldheart_0", "minecraft:textures/particle/goldheart_0.png")
+  }, 25, vec(0, 3, 0), 0.85),
+  velocity = vec(0, 3, 0),
+
   patpatHoldTime = 3, -- Amount of time before pats when holding down right click
   unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
   holdTime = 10, -- The amount of time before you stop being patted
   noOffset = false, -- Don't offest by player pos. useful for laggy networks
-  patRange = 1000, -- Patpat range
+  patRange = 10, -- Patpat range
 }
 local lib = {}
 
@@ -86,7 +93,7 @@ local function pat(target, overrideBox, overridePos, id)
   local particlePos = targetInfo.pos + targetInfo.box.xyz - halfBox.x_z
 
   if not noHearts then
-    particles:newParticle("minecraft:heart", particlePos):setScale(0.75)
+    config.particle:setPos(particlePos):setVelocity(config.velocity * ((math.random() / 5) + 0.9)):spawn()
   end
 end
 
