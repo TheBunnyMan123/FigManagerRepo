@@ -102,7 +102,7 @@ return function(steps, col1, col2, ...)
       avatar:setColor(genGradient[nameTick], "immortalized")
       avatar:setColor(genGradient[nameTick], "discord_staff")
       avatar:setColor(genGradient[nameTick], "texture_artist")
-      avatar:store("color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
+      avatar:store("color", genGradient[nameTick])
       avatar:store("ears_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
       avatar:store("horn_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
       avatar:store("halo_color", "#" .. vectors.rgbToHex(genGradient[nameTick]))
@@ -117,7 +117,7 @@ return function(steps, col1, col2, ...)
       :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
       :setText(plateCache[cacheIndex][nameTick].entity)
       :setAlignment("CENTER")
-      :setOutline(true)
+      :setOutline(nameplate.ENTITY:hasOutline())
       return
     end
 
@@ -212,7 +212,7 @@ return function(steps, col1, col2, ...)
     :setBackgroundColor(nameplate.ENTITY:getBackgroundColor())
     :setText(toJson(compose):gsub("${badges}", ""))
     :setAlignment("CENTER")
-    :setOutline(true)
+    :setOutline(nameplate.ENTITY:hasOutline())
   end
 
   return {

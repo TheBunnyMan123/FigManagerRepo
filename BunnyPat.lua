@@ -32,7 +32,7 @@ local config = {
   velocity = vec(0, 3, 0),
 
   patpatHoldTime = 3, -- Amount of time before pats when holding down right click
-  unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
+  unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
   holdTime = 10, -- The amount of time before you stop being patted
   noOffset = false, -- Don't offest by player pos. useful for laggy networks
   patRange = 10, -- Patpat range
