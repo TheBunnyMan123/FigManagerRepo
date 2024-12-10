@@ -166,7 +166,9 @@ local getTargetedEntity = function()
    if not entity then
       if config.unsafeVariables then
          local pPos = player:getPos()
-         
+         local aabbs = {}
+         local aabbMap = {}
+
          for _, v in pairs(world.getEntities(pPos - config.patRange, pPos + config.patRange)) do
             if (v ~= player) and v:getVariable("patpat.boundingBox") then
                local halfBox = v:getVariable("patpat.boundingBox")
@@ -177,13 +179,17 @@ local getTargetedEntity = function()
                   pos + halfBox
                }
 
-               local hit = raycast:aabb(start, start + (player:getLookDir() * config.patRange), {aabb})
-
-               if hit then
-                  return v
-               end
+               table.insert(aabbs, aabb)
+               aabbMap[aabb] = v
             end
          end
+
+         local hit = raycast:aabb(start, start + (player:getLookDir() * config.patRange), aabbs)
+
+         if hit then
+            return aabbMap[hit]
+         end
+
       end
       return
    end
