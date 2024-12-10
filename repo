@@ -8,9 +8,11 @@
   "BunnyPat": {
     "url": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyPat.lua",
     "dependencies": [
-      "BunnyEventLib"
+      "BunnyEventLib",
+      "BunnyParticles"
     ]
   },
+  "BunnyParticles": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyParticles.lua",
   "BunnyEventLib": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyEventLib.lua",
   "BunnyUtils": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyUtils.lua",
   "BunnyAsync": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/async.lua",

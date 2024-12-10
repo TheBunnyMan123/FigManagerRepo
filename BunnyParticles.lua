@@ -43,6 +43,12 @@ local particleMetatable = {
    __index = {}
 }
 
+function particleMetatable.__index.setScale(self, num)
+   self._scale = num
+
+   return self
+end
+
 function particleMetatable.__index.setPos(self, x, y, z)
    local pos
 
@@ -87,7 +93,7 @@ function particleMetatable.__index.spawn(self)
    table.insert(particles, {
       oldPos = self._pos,
       pos = self._pos,
-      task = mdl:newSprite("particle" .. particleIter),
+      task = mdl:newSprite("particle" .. particleIter):setScale(self._scale),
       lifetime = self._lifetime,
       life = 0,
       vel = self._vel,
