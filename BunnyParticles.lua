@@ -34,7 +34,7 @@ function events.WORLD_RENDER(delta)
    for _, v in pairs(particles) do
       local pos = math.lerp(v.oldPos, v.pos, delta)
       local rot = client.getCameraRot() - 180
-      v.task:setPos((pos*16) + getParticleOffsetFromRotation(rot, vectors.vec3(), (v.task:getScale() or 1)*v.task:getSize().xy_))
+      v.task:setLight(15):setPos((pos*16) + getParticleOffsetFromRotation(rot, vectors.vec3(), (v.task:getScale() or 1)*v.task:getSize().xy_))
       v.task:setRot(rot)
    end
 end
