@@ -8,7 +8,7 @@ end
 
 local eventMetatable = {
    __newindex = function() return end,
-   __index = {__registered = {}},
+   __index = {},
    __type = "Event"
 }
 
@@ -81,7 +81,7 @@ local eventsMetatable = mkReadOnly {
 local lib = {}
 
 function lib.newEvent()
-   return setmetatable({}, eventMetatable)
+   return setmetatable({__registered = {}}, eventMetatable)
 end
 
 function lib.newEvents()

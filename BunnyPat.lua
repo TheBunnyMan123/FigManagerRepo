@@ -15,6 +15,7 @@ limitations under the License.
 --]]
 
 local eventLibExists, eventLib = pcall(require, ....."/BunnyEventLib")
+local baseBoundingBox = vec(0.6, 1.8, 0.6)
 
 if not eventLibExists then
    eventLib = {}
@@ -24,9 +25,9 @@ if not eventLibExists then
          register = function(self, func)
             table.insert(self._registered, func)
          end,
-         invoke = function(self)
+         invoke = function(self, ...)
             for _, v in pairs(self._registered) do
-               v()
+               v(...)
             end
          end
       }
@@ -34,24 +35,31 @@ if not eventLibExists then
 end
 
 local patEvents = eventLibExists and eventLib.newEvents() or {}
-patEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted
-patEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted
-patEvents.TOGGLE_PAT = eventLib.newEvent() -- Runs when you start or stop being patted
-patEvents.WHILE_PAT = eventLib.newEvent() -- Runs every tick you are being patted
-patEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you
+patEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted func()
+patEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted func()
+patEvents.TOGGLE_PAT = eventLib.newEvent() -- Runs when you start or stop being patted func(bool)
+patEvents.WHILE_PAT = eventLib.newEvent() -- Runs every tick you are being patted func(patters)
+patEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you func(entity)
+
+local headPatEvents = eventLibExists and eventLib.newEvents() or {}
+headPatEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted func(pos)
+headPatEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted func(pos)
+headPatEvents.TOGGLE_PAT = eventLib.newEvent() -- Runs when you start or stop being patted func(bool, pos)
+headPatEvents.WHILE_PAT = eventLib.newEvent() -- Runs every tick you are being patted func(patters, pos)
+headPatEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you func(entity, pos)
 
 local particlesexist, bunnyparticles = pcall(require, ....."/BunnyParticles")
-print(particlesexist, bunnyparticles)
+
 local pats = 0
 local config = {
    particle = particles["heart"],
    velocity = vec(0, 3, 0),
 
    patpatHoldTime = 3, -- Amount of time before pats when holding down right click
-   unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
+   unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
    holdTime = 10, -- The amount of time before you stop being patted
    noOffset = false, -- Don't offest by player pos. useful for laggy networks
-   patRange = 10, -- Patpat range
+   patRange = 1000, -- Patpat range
 }
 
 if particlesexist then
@@ -64,6 +72,19 @@ end
 local lib = {}
 
 local myPatters = {}
+local myHeadPatters = {}
+
+local function getVarsFromHead(block)
+   if block.id == "minecraft:player_head" or block.id == "minecraft:player_wall_head" then
+      local entityData = block:getEntityData()
+      if entityData then
+         local skullOwner = entityData.SkullOwner and entityData.SkullOwner.Id and client.intUUIDToString(table.unpack(entityData.SkullOwner.Id))
+         if skullOwner then
+            return world.avatarVars()[skullOwner] or {}
+         end
+      end
+   end
+end
 
 local function pat(target, overrideBox, overridePos, id)
    if not player:isLoaded() then return end
@@ -92,6 +113,15 @@ local function pat(target, overrideBox, overridePos, id)
       else
          return
       end
+
+      local vars = getVarsFromHead(target)
+      if vars then
+         pcall(vars["petpet.playerHead"], avatar:getUUID(), config.patpatHoldTime * 1.5, targetInfo.pos:unpack())
+
+         if vars["patpat.noHearts"] then
+            return
+         end
+      end
    elseif target == nil and overrideBox then
       targetInfo = {
          box = overrideBox,
@@ -113,8 +143,8 @@ local function pat(target, overrideBox, overridePos, id)
    end
    local halfBox = targetInfo.box / 2
 
-   targetInfo.box:applyFunc(function(val) return val * math.random() end)
-   local particlePos = targetInfo.pos + targetInfo.box.xyz - halfBox.x_z
+   local box = targetInfo.box:copy():applyFunc(function(val) return val * math.random() end)
+   local particlePos = targetInfo.pos + box.xyz - halfBox.x_z
 
    if not noHearts then
       config.particle:setPos(particlePos):setVelocity(config.velocity * ((math.random() / 5) + 0.9)):spawn()
@@ -140,6 +170,24 @@ local petpetFunc = function(uuid, timer)
    local entity = world.getEntity(uuid)
    if entity then
       patEvents.ONCE_PAT:invoke(entity)
+   end
+end
+local headPatFunc = function(uuid, timer, x, y, z)
+   local pos = vectors.vec3(x, y, z)
+   local index = tostring(pos:copy():floor())
+   
+   myHeadPatters[index] = myHeadPatters[index] or {}
+   local patters = myHeadPatters[index]
+
+   if not patters[uuid] then
+      headPatEvents.ON_PAT:invoke(pos:copy():floor())
+      headPatEvents.TOGGLE_PAT:invoke(true, pos:copy():floor())
+   end
+   patters[uuid] = math.clamp(timer, config.holdTime, 100)
+   
+   local entity = world.getEntity(uuid)
+   if entity then
+      headPatEvents.ONCE_PAT:invoke(entity, pos:copy():floor())
    end
 end
 
@@ -222,9 +270,39 @@ local getTargetedBlock = function()
    return raycast:block(start, start + (player:getLookDir() * config.patRange))
 end
 
+local function compileVec3(str)
+   local x = str:match("^{([0-9.]+), [0-9.]+, [0-9.]+}$")
+   local y = str:match("^{[0-9.]+, ([0-9.]+), [0-9.]+}$")
+   local z = str:match("^{[0-9.]+, [0-9.]+, ([0-9.]+)}$")
+
+   return vec(tonumber(x), tonumber(y), tonumber(z))
+end
+
 function events.TICK()
    if not player:isSwingingArm() and not host:isHost() then
       avatar:store("bunnypat.id", "")
+   end
+
+   for index, headPatters in pairs(myHeadPatters) do
+      local patted = false
+      local pos = compileVec3(index)
+
+      for uuid, time in pairs(headPatters) do
+         if time <= 0 then
+            headPatters[uuid] = nil
+            headPatEvents.ON_UNPAT:invoke(pos:copy():floor())
+            headPatEvents.TOGGLE_PAT:invoke(false, pos:copy():floor())
+         else
+            headPatters[uuid] = headPatters[uuid] - 1
+            patted = true
+         end
+      end
+
+      if patted then
+         headPatEvents.WHILE_PAT:invoke(headPatters, pos:copy():floor())
+      else
+         headPatters[index] = nil
+      end
    end
 
    local patted = false
@@ -304,6 +382,7 @@ function events.TICK()
 end
 
 avatar:store("petpet", petpetFunc)
+avatar:store("petpet.playerHead", headPatFunc)
 
-return patEvents
+return patEvents, headPatEvents
 
