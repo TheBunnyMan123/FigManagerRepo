@@ -34,6 +34,9 @@ if not eventLibExists then
    end
 end
 
+---@alias eventTable {ON_PAT: Event, ON_UNPAT: Event, TOGGLE_PAT: Event, WHILE_PAT: Event, ONCE_PAT: Event}
+
+---@type eventTable
 local patEvents = eventLibExists and eventLib.newEvents() or {}
 patEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted func()
 patEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted func()
@@ -41,6 +44,7 @@ patEvents.TOGGLE_PAT = eventLib.newEvent() -- Runs when you start or stop being 
 patEvents.WHILE_PAT = eventLib.newEvent() -- Runs every tick you are being patted func(patters)
 patEvents.ONCE_PAT = eventLib.newEvent() -- Runs each time someone pats you func(entity)
 
+---@type eventTable
 local headPatEvents = eventLibExists and eventLib.newEvents() or {}
 headPatEvents.ON_PAT = eventLib.newEvent() -- Runs when you start being patted func(pos)
 headPatEvents.ON_UNPAT = eventLib.newEvent() -- Runs when you stop being patted func(pos)
@@ -52,14 +56,14 @@ local particlesexist, bunnyparticles = pcall(require, ....."/BunnyParticles")
 
 local pats = 0
 local config = {
-   particle = particles["heart"],
+   particle = "heart", -- If you have my particle lib check the below if statement
    velocity = vec(0, 3, 0),
 
    patpatHoldTime = 3, -- Amount of time before pats when holding down right click
-   unsafeVariables = true, -- Vectors and other things inside avatar vars can be unsade
+   unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
    holdTime = 10, -- The amount of time before you stop being patted
    noOffset = false, -- Don't offest by player pos. useful for laggy networks
-   patRange = 1000, -- Patpat range
+   patRange = 10, -- Patpat range
 }
 
 if particlesexist then
@@ -68,6 +72,8 @@ if particlesexist then
       textures:fromVanilla("goldheart_1", "minecraft:textures/particle/goldheart_1.png"),
       textures:fromVanilla("goldheart_0", "minecraft:textures/particle/goldheart_0.png")
    }, 25, vec(0, 3, 0), 0.85)
+else
+   config.velocity = config.velocity / 16
 end
 local lib = {}
 
@@ -147,7 +153,11 @@ local function pat(target, overrideBox, overridePos, id)
    local particlePos = targetInfo.pos + box.xyz - halfBox.x_z
 
    if not noHearts then
-      config.particle:setPos(particlePos):setVelocity(config.velocity * ((math.random() / 5) + 0.9)):spawn()
+      if type(config.particle) == "string" then
+         particles:newParticle(config.particle, particlePos, config.velocity):setVelocity(config.velocity)
+      else
+         config.particle:setPos(particlePos):setVelocity(config.velocity * ((math.random() / 5) + 0.9)):spawn()
+      end
    end
 end
 
@@ -173,6 +183,9 @@ local petpetFunc = function(uuid, timer)
    end
 end
 local headPatFunc = function(uuid, timer, x, y, z)
+   if not x or not y or not z then
+      return
+   end
    local pos = vectors.vec3(x, y, z)
    local index = tostring(pos:copy():floor())
    
@@ -271,15 +284,13 @@ local getTargetedBlock = function()
 end
 
 local function compileVec3(str)
-   local x = str:match("^{([0-9.]+), [0-9.]+, [0-9.]+}$")
-   local y = str:match("^{[0-9.]+, ([0-9.]+), [0-9.]+}$")
-   local z = str:match("^{[0-9.]+, [0-9.]+, ([0-9.]+)}$")
+   local x, y, z = str:match("^{(%-?[0-9.]+), (%-?[0-9.]+), (%-?[0-9.]+)}$")
 
    return vec(tonumber(x), tonumber(y), tonumber(z))
 end
 
-function events.TICK()
-   if not player:isSwingingArm() and not host:isHost() then
+function events.WORLD_TICK()
+   if (not player:isLoaded() or not player:isSwingingArm()) and not host:isHost() then
       avatar:store("bunnypat.id", "")
    end
 
@@ -321,12 +332,12 @@ function events.TICK()
       patEvents.WHILE_PAT:invoke(myPatters)
    end
 
-   if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
+   if (player:isLoaded() and not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
       pings.clearId()
    end
 
    tick = tick + 1
-   if not right:isPressed() or not player:isSneaking() then
+   if not right:isPressed() or not (player:isLoaded() and player:isSneaking()) then
       lastPat = -10
       return
    end
@@ -335,45 +346,56 @@ function events.TICK()
       return
    end
 
-   lastPat = tick
-   local target = getTargetedEntity(1000)
-   local blockTarget = getTargetedBlock(1000)
+   if player:isLoaded() and host:isHost() then
+      lastPat = tick
+      local target = getTargetedEntity()
+      local blockTarget = getTargetedBlock()
 
-   if target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false then
-      pings.pat(client.uuidToIntArray(target:getUUID()))
-      host:swingArm()
-   elseif blockTarget and (blockTarget.id:match("head") or blockTarget.id:match("skull")) then
-      pings.pat(blockTarget:getPos() - (config.noOffset and player:getPos() or 0))
-      host:swingArm()
-   else
-      if config.unsafeVariables then
-         for _, v in pairs(world.avatarVars()) do
-            if not v then return end
-            local boxes = v["bunnypat.boxes"] or {}
-            for _, w in pairs(boxes) do
-               w = {box = w.box, pos = w.pos, id = w.id}
-               if not w.box or not w.pos then
-                  error("Invalid custom bounding box" .. toJson(w))
-               end
+      local playerPos = player:getPos()
+      local blockCloser
 
-               local succ1, err1 = pcall(figuraMetatables.Vector3.__index, w.box, "xyz")
-               local succ2, err2 = pcall(figuraMetatables.Vector3.__index, w.pos, "xyz")
+      if not target or not blockTarget then
+         blockCloser = false
+      else
+         blockCloser = (blockTarget:getPos() - playerPos):length() < (target:getPos() - playerPos):length()
+      end
 
-               if not succ1 or not succ2 then
-                  return
-               end
-               w.box = err1
-               w.pos = err2
+      if target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false and not blockCloser then
+         pings.pat(client.uuidToIntArray(target:getUUID()))
+         host:swingArm()
+      elseif blockTarget and (blockTarget.id:match("head") or blockTarget.id:match("skull")) then
+         pings.pat(blockTarget:getPos() - (config.noOffset and player:getPos() or 0))
+         host:swingArm()
+      else
+         if config.unsafeVariables then
+            for _, v in pairs(world.avatarVars()) do
+               if not v then return end
+               local boxes = v["bunnypat.boxes"] or {}
+               for _, w in pairs(boxes) do
+                  w = {box = w.box, pos = w.pos, id = w.id}
+                  if not w.box or not w.pos then
+                     error("Invalid custom bounding box" .. toJson(w))
+                  end
 
-               local halfBox = w.box / 2
-               local aabb = {{w.pos - halfBox.x_z, w.pos + vec(halfBox.x, w.box.y, halfBox.z)}}
-               local start = player:getPos()+ vec(0, player:getEyeHeight(), 0) + (renderer:getEyeOffset() or vectors.vec3())
+                  local succ1, err1 = pcall(figuraMetatables.Vector3.__index, w.box, "xyz")
+                  local succ2, err2 = pcall(figuraMetatables.Vector3.__index, w.pos, "xyz")
 
-               local hit = raycast:aabb(start, start + (host:getReachDistance() * player:getLookDir()), aabb)
+                  if not succ1 or not succ2 then
+                     return
+                  end
+                  w.box = err1
+                  w.pos = err2
 
-               if hit then
-                  host:swingArm()
-                  pings.pat(nil, w.box, w.pos - (config.noOffset and player:getPos() or 0), w.id)
+                  local halfBox = w.box / 2
+                  local aabb = {{w.pos - halfBox.x_z, w.pos + vec(halfBox.x, w.box.y, halfBox.z)}}
+                  local start = player:getPos()+ vec(0, player:getEyeHeight(), 0) + (renderer:getEyeOffset() or vectors.vec3())
+
+                  local hit = raycast:aabb(start, start + (host:getReachDistance() * player:getLookDir()), aabb)
+
+                  if hit then
+                     host:swingArm()
+                     pings.pat(nil, w.box, w.pos - (config.noOffset and player:getPos() or 0), w.id)
+                  end
                end
             end
          end
