@@ -332,7 +332,11 @@ function events.WORLD_TICK()
       patEvents.WHILE_PAT:invoke(myPatters)
    end
 
-   if (player:isLoaded() and not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
+   if (player:isLoaded()) then
+      if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
+         pings.clearId()
+      end
+   elseif world.avatarVars()[avatar:getUUID()]["bunnypat.id"] ~= "" then
       pings.clearId()
    end
 
