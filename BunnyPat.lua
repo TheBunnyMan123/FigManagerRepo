@@ -410,5 +410,5 @@ end
 avatar:store("petpet", petpetFunc)
 avatar:store("petpet.playerHead", headPatFunc)
 
-return patEvents, headPatEvents
+return patEvents, headPatEvents, config
 
