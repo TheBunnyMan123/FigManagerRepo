@@ -289,31 +289,9 @@ local function compileVec3(str)
    return vec(tonumber(x), tonumber(y), tonumber(z))
 end
 
-function events.WORLD_TICK()
-   if (not player:isLoaded() or not player:isSwingingArm()) and not host:isHost() then
+function events.TICK()
+   if (not player:isSwingingArm()) and not host:isHost() then
       avatar:store("bunnypat.id", "")
-   end
-
-   for index, headPatters in pairs(myHeadPatters) do
-      local patted = false
-      local pos = compileVec3(index)
-
-      for uuid, time in pairs(headPatters) do
-         if time <= 0 then
-            headPatters[uuid] = nil
-            headPatEvents.ON_UNPAT:invoke(pos:copy():floor())
-            headPatEvents.TOGGLE_PAT:invoke(false, pos:copy():floor())
-         else
-            headPatters[uuid] = headPatters[uuid] - 1
-            patted = true
-         end
-      end
-
-      if patted then
-         headPatEvents.WHILE_PAT:invoke(headPatters, pos:copy():floor())
-      else
-         headPatters[index] = nil
-      end
    end
 
    local patted = false
@@ -332,16 +310,12 @@ function events.WORLD_TICK()
       patEvents.WHILE_PAT:invoke(myPatters)
    end
 
-   if (player:isLoaded()) then
-      if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
-         pings.clearId()
-      end
-   elseif world.avatarVars()[avatar:getUUID()]["bunnypat.id"] ~= "" then
+   if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
       pings.clearId()
    end
 
    tick = tick + 1
-   if not right:isPressed() or not (player:isLoaded() and player:isSneaking()) then
+   if not right:isPressed() or not player:isSneaking() then
       lastPat = -10
       return
    end
@@ -350,7 +324,7 @@ function events.WORLD_TICK()
       return
    end
 
-   if player:isLoaded() and host:isHost() then
+   if host:isHost() then
       lastPat = tick
       local target = getTargetedEntity()
       local blockTarget = getTargetedBlock()
@@ -404,6 +378,41 @@ function events.WORLD_TICK()
             end
          end
       end
+   end
+end
+
+function events.WORLD_TICK()
+   for index, headPatters in pairs(myHeadPatters) do
+      local patted = false
+      local pos = compileVec3(index)
+
+      local patterCount = 0
+      for k in pairs(headPatters) do
+         patterCount = patterCount + 1
+      end
+      if patterCount == 0 then
+         myHeadPatters[index] = nil
+         goto continue
+      end
+
+      for uuid, time in pairs(headPatters) do
+         if time <= 0 then
+            headPatters[uuid] = nil
+            headPatEvents.ON_UNPAT:invoke(pos:copy():floor())
+            headPatEvents.TOGGLE_PAT:invoke(false, pos:copy():floor())
+         else
+            headPatters[uuid] = headPatters[uuid] - 1
+            patted = true
+         end
+      end
+
+      if patted then
+         headPatEvents.WHILE_PAT:invoke(headPatters, pos:copy():floor())
+      else
+         headPatters[index] = nil
+      end
+
+      ::continue::
    end
 end
 
