@@ -97,6 +97,29 @@ end
 function componentIndex:toJson()
    return toJson(self._text)
 end
+---Sets the component's hover text
+---@param text TextComponent|table
+---@return TextComponent
+function componentIndex:setHoverText(text)
+   self._text.hoverEvent = {
+      action = "show_text",
+      value = text._text or text
+   }
+
+   return self
+end
+---Sets the component's click event
+---@param action "open_url"|"open_file"|"run_command"|"suggest_command"|"change_page"|"copy_to_clipboard"
+---@param value any
+---@return TextComponent
+function componentIndex:setClickEvent(action, value)
+   self._text.clickEvent = {
+      action = action,
+      value = value
+   }
+
+   return self
+end
 
 ---Sets the style's font
 ---@param font string
