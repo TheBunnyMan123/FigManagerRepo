@@ -12,6 +12,7 @@
       "BunnyParticles"
     ]
   },
+  "Nebula": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/Nebula.lua",
   "TextComponents": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/TextComponents.lua",
   "BunnyParticles": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyParticles.lua",
   "BunnyEventLib": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyEventLib.lua",
