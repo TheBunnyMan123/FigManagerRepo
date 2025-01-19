@@ -1,9 +1,6 @@
 {
   "ActionWheelPlusPlus": {
     "url": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/ActionWheelPlusPlus.lua",
-      "dependencies": [
-        "GNUI"
-      ]
   },
   "BunnyPat": {
     "url": "https://raw.githubusercontent.com/TheBunnyMan123/FigManagerRepo/refs/heads/main/BunnyPat.lua",
