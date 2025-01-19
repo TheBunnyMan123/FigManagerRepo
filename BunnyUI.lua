@@ -220,7 +220,12 @@ function events.WORLD_RENDER()
       if type(v) == "BunnyUI.Text" then
         local textJson = {}
         if v.fancy then
-          textJson = parseJson(v.text)
+          local succ
+          succ, textJson = pcall(parseJson, v.text)
+
+          if not succ then
+             textJson = v.text or ""
+          end
         else
           textJson = {
             text = v.text,
@@ -241,7 +246,12 @@ function events.WORLD_RENDER()
       elseif type(v) == "BunnyUI.TextButton" then
         local textJson = {}
         if v.fancy then
-          textJson = parseJson(v.text)
+          local succ
+          succ, textJson = pcall(parseJson, v.text)
+
+          if not succ then
+             textJson = v.text or ""
+          end
         else
           textJson = {
             text = v.text,
