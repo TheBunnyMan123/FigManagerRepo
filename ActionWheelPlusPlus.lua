@@ -27,6 +27,8 @@ limitations under the License.
 ---@alias ActionWheelPlusPlus.colorFunc fun(color: Vector3, self: ActionWheelPlusPlus.Page)
 ---@alias ActionWheelPlusPlus.radioFunc fun(option: any, self: ActionWheelPlusPlus.Page)
 
+local shift = keybinds:of("lshift", "key.keyboard.left.shift")
+local control = keybinds:of("lctrl", "key.keyboard.left.control")
 local mainPage = action_wheel:newPage("main")
 ---@class ActionWheelPlusPlus.Page
 local lib = {page = mainPage}
@@ -43,7 +45,6 @@ function lib.newButton(self, name, item, func)
     :setTitle(name)
     :setItem(item)
     :setOnLeftClick(func)
-    :setColor(1, 0.5, 0.2)
 
   return new
 end
@@ -59,7 +60,6 @@ function lib.newToggle(self, name, item, func)
     :setTitle(name)
     :setItem(item)
     :setOnToggle(func)
-    :setColor(vec(1, 0.2, 0.2))
     :setToggleColor(vec(0.2, 1, 0.2))
 
   return new
@@ -75,8 +75,10 @@ end
 ---@param step integer?
 ---@param default integer?
 ---@return Action
-function lib.newNumber(self, name, item, func, min, max, step, default)
+function lib.newNumber(self, name, item, func, min, max, step, default, largeStep, smallStep)
   step = step or 1
+  largeStep = largeStep or step * 4
+  smallStep = smallStep or step / 4
   default = default or min
   local num = default
 
@@ -94,12 +96,19 @@ function lib.newNumber(self, name, item, func, min, max, step, default)
   local new = self.page:newAction()
     :setTitle(toJson(nameJson))
     :setItem(item)
-    :setColor(vec(0.2, 1, 1))
     :setOnScroll(function(dir, slf)
+      local stepSize = step
+
+      if shift:isPressed() then
+         stepSize = smallStep
+      elseif control:isPressed() then
+         stepSize = largeStep
+      end
+
       if dir > 0 then
-        num = math.clamp(num + step, min, max)
+        num = math.clamp(num + stepSize, min, max)
       else
-        num = math.clamp(num - step, min, max)
+        num = math.clamp(num - stepSize, min, max)
       end
 
       nameJson[#nameJson].text = " [" .. num .. "]"
@@ -194,7 +203,6 @@ function lib.newText(self, name, item, func, default)
   local new = self.page:newAction()
     :setTitle(toJson(nameJson))
     :setItem(item)
-    :setColor(0.2, 0.2, 1)
     :setOnRightClick(function(slf)
       func(str, slf)
     end)
@@ -233,7 +241,6 @@ end
 function lib.newRadio(self, name, item, func, options, default)
   local new = self:newPage(name, item)
   new.page:setAction(1, nil)
-  new.action:setColor(1, 1, 0.2)
 
   local option = default or options[1]
 
@@ -287,7 +294,6 @@ function lib.newPage(self, name, item)
   local action = self.page:newAction()
     :setTitle(name)
     :setItem(item)
-    :setColor(1, 0.2, 1)
     :setOnLeftClick(function()
       table.insert(pageHistory, self.page)
       action_wheel:setPage(new)
