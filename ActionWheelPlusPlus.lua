@@ -143,17 +143,17 @@ function lib.newColor(self, name, item, func, default)
     colorTemp.x = num
     updateColor()
     slf:setColor(colorTemp.x__ / 255)
-  end, 0, 255, 5, color.x):setColor(color.x__)
+  end, 0, 255, 5, color.x, 25, 1):setColor(color.x__)
   local g = new:newNumber("Green", "minecraft:green_dye", function(num, slf)
     colorTemp.y = num
     updateColor()
     slf:setColor(colorTemp._y_ / 255)
-  end, 0, 255, 5, color.y):setColor(color._y_)
+  end, 0, 255, 5, color.y, 25, 1):setColor(color._y_)
   local b = new:newNumber("Blue", "minecraft:blue_dye", function(num, slf)
     colorTemp.z = num
     updateColor()
     slf:setColor(colorTemp.__z / 255)
-  end, 0, 255, 5, color.z):setColor(color.__z)
+  end, 0, 255, 5, color.z, 25, 1):setColor(color.__z)
 
   local cancel = new:newButton("Cancel", "minecraft:barrier", function()
     colorTemp = color:copy()
@@ -288,7 +288,8 @@ function lib.newPage(self, name, item)
       color = "#FF3636"
     }))
     :setOnLeftClick(function()
-      action_wheel:setPage(pageHistory[#pageHistory - 1])
+       pageHistory[#pageHistory] = nil
+      action_wheel:setPage(pageHistory[#pageHistory])
     end)
 
   local action = self.page:newAction()
