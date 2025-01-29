@@ -38,6 +38,10 @@ local function tracebackError(msg, username)
    local erroredScript, mainLine, reason = msg:match("^(.-):([0-9]-) (.-)\n")
    local code = msg:match("script:%s+(.-)$")
    local trace = {}
+
+   if not reason then
+      return
+   end
    
    local newScript, newLine, syntax = reason:match('%[string "(.+)"%]:([0-9]-): (syntax error)')
    if syntax then
@@ -93,6 +97,8 @@ local function newError(msg)
     errored = true
     local err = tracebackError(msg)
 
+    if not err then err = msg end
+
     printJson(err)
 
     for _, v in pairs(events:getEvents()) do
@@ -144,6 +150,7 @@ end
 if goofy then 
   function events.ERROR(msg)
     local err = tracebackError(msg)
+    if not err then err = msg end
     printJson(err)
     goofy:stopAvatar(err)
     return true
