@@ -59,6 +59,7 @@ local config = {
    particle = "heart", -- If you have my particle lib check the below if statement
    velocity = vec(0, 3, 0),
 
+   infinipat = false, -- Pat once per frame?
    patpatHoldTime = 3, -- Amount of time before pats when holding down right click
    unsafeVariables = false, -- Vectors and other things inside avatar vars can be unsade
    holdTime = 10, -- The amount of time before you stop being patted
@@ -94,6 +95,8 @@ end
 
 local function pat(target, overrideBox, overridePos, id)
    if not player:isLoaded() then return end
+   host:swingArm()
+
    local targetInfo, noHearts
    if type(target) == "string" then
       target = world.getEntity(target)
@@ -161,7 +164,19 @@ local function pat(target, overrideBox, overridePos, id)
    end
 end
 
+local patting = {}
+function pings.stopPatting()
+   patting = false
+end
 function pings.pat(uuidint1, uuidint2, uuidint3, uuidint4)
+   patting = {uuidint1, uuidint2, uuidint3, uuidint4}
+end
+on["render"] = function()
+   if not patting or not config.infinipat then
+      return
+   end
+
+   local uuidint1, uuidint2, uuidint3, uuidint4 = table.unpack(patting)
    if type(uuidint1) == "number" then
       pat(client.intUUIDToString(uuidint1, uuidint2, uuidint3, uuidint4))
    else
@@ -219,7 +234,7 @@ local getTargetedEntity = function()
    local entity
    
    if config.patRange <= 20 then
-      entity =  player:getTargetedEntity(config.patRange)
+      entity = player:getTargetedEntity(config.patRange)
    else
       entity = raycast:entity(start, start + (player:getLookDir() * config.patRange), function(e) return e~=player end)
    end
@@ -310,6 +325,9 @@ function events.TICK()
       patEvents.WHILE_PAT:invoke(myPatters)
    end
 
+   if not right:isPressed() and patting then
+      pings.stopPatting()
+   end
    if (not right:isPressed() or not player:isSwingingArm()) and (player:getVariable("bunnypat.id") or "") ~= "" then
       pings.clearId()
    end
@@ -317,15 +335,25 @@ function events.TICK()
    tick = tick + 1
    if not right:isPressed() or not player:isSneaking() then
       lastPat = -10
+
+      if patting then
+         pings.stopPatting()
+      end
+
       return
    end
 
-   if not (lastPat + config.patpatHoldTime <= tick) then
-      return
+   if not config.infinipat and patting and (lastPat + config.patpatHoldTime <= tick) then
+      local uuidint1, uuidint2, uuidint3, uuidint4 = table.unpack(patting)
+      if type(uuidint1) == "number" then
+         pat(client.intUUIDToString(uuidint1, uuidint2, uuidint3, uuidint4))
+      else
+         pat(uuidint1, uuidint2, uuidint3, uuidint4)
+      end
+      lastPat = tick
    end
 
    if host:isHost() then
-      lastPat = tick
       local target = getTargetedEntity()
       local blockTarget = getTargetedBlock()
 
@@ -338,10 +366,10 @@ function events.TICK()
          blockCloser = (blockTarget:getPos() - playerPos):length() < (target:getPos() - playerPos):length()
       end
 
-      if target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false and not blockCloser then
+      if not patting and target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false and not blockCloser then
          pings.pat(client.uuidToIntArray(target:getUUID()))
          host:swingArm()
-      elseif blockTarget and (blockTarget.id:match("head") or blockTarget.id:match("skull")) then
+      elseif not patting and blockTarget and (blockTarget.id:match("head") or blockTarget.id:match("skull")) then
          pings.pat(blockTarget:getPos() - (config.noOffset and player:getPos() or 0))
          host:swingArm()
       else
@@ -359,6 +387,7 @@ function events.TICK()
                   local succ2, err2 = pcall(figuraMetatables.Vector3.__index, w.pos, "xyz")
 
                   if not succ1 or not succ2 then
+                     pings.stopPatting()
                      return
                   end
                   w.box = err1
@@ -370,12 +399,21 @@ function events.TICK()
 
                   local hit = raycast:aabb(start, start + (host:getReachDistance() * player:getLookDir()), aabb)
 
-                  if hit then
+                  if not patting and hit then
                      host:swingArm()
                      pings.pat(nil, w.box, w.pos - (config.noOffset and player:getPos() or 0), w.id)
+                     return
                   end
                end
             end
+
+            if patting
+            and not (target and not target:getVariable("patpat.noPats") and target:getVariable("petpet.yesPats") ~= false and not blockCloser
+                 or blockTarget and (blockTarget.id:match("head") or blockTarget.id:match("skull"))) then
+               pings.stopPatting()
+            end
+         else
+            pings.stopPatting()
          end
       end
    end
