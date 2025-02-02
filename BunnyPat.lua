@@ -171,7 +171,7 @@ end
 function pings.pat(uuidint1, uuidint2, uuidint3, uuidint4)
    patting = {uuidint1, uuidint2, uuidint3, uuidint4}
 end
-on["render"] = function()
+function events.render()
    if not patting or not config.infinipat then
       return
    end
