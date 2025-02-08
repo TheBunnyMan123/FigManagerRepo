@@ -41,12 +41,12 @@ local pageHistory = {}
 ---@param func Action.clickFunc
 ---@return Action
 function lib.newButton(self, name, item, func)
-  local new = self.page:newAction()
-    :setTitle(name)
-    :setItem(item)
-    :setOnLeftClick(func)
+   local new = self.page:newAction()
+   :setTitle(name)
+   :setItem(item)
+   :setOnLeftClick(func)
 
-  return new
+   return new
 end
 
 ---Creates a new button on the action wheel page
@@ -56,13 +56,13 @@ end
 ---@param func Action.toggleFunc
 ---@return Action
 function lib.newToggle(self, name, item, func)
-  local new = self.page:newAction()
-    :setTitle(name)
-    :setItem(item)
-    :setOnToggle(func)
-    :setToggleColor(vec(0.2, 1, 0.2))
+   local new = self.page:newAction()
+   :setTitle(name)
+   :setItem(item)
+   :setOnToggle(func)
+   :setToggleColor(vec(0.2, 1, 0.2))
 
-  return new
+   return new
 end
 
 ---Creates a new button on the action wheel page
@@ -76,27 +76,27 @@ end
 ---@param default integer?
 ---@return Action
 function lib.newNumber(self, name, item, func, min, max, step, default, largeStep, smallStep)
-  step = step or 1
-  largeStep = largeStep or step * 4
-  smallStep = smallStep or step / 4
-  default = default or min
-  local num = default
+   step = step or 1
+   largeStep = largeStep or step * 4
+   smallStep = smallStep or step / 4
+   default = default or min
+   local num = default
 
-  local isJson, nameJson = pcall(parseJson, name)
-  if not isJson then
-    nameJson = {{text = name}}
-  elseif not nameJson[1] then
-    nameJson = {nameJson}
-  end
-  table.insert(nameJson, {
-    text = " [" .. num .. "]",
-    color = "white"
-  })
+   local isJson, nameJson = pcall(parseJson, name)
+   if not isJson then
+      nameJson = {{text = name}}
+   elseif not nameJson[1] then
+      nameJson = {nameJson}
+   end
+   table.insert(nameJson, {
+      text = " [" .. num .. "]",
+      color = "white"
+   })
 
-  local new = self.page:newAction()
-    :setTitle(toJson(nameJson))
-    :setItem(item)
-    :setOnScroll(function(dir, slf)
+   local new = self.page:newAction()
+   :setTitle(toJson(nameJson))
+   :setItem(item)
+   :setOnScroll(function(dir, slf)
       local stepSize = step
 
       if shift:isPressed() then
@@ -106,9 +106,9 @@ function lib.newNumber(self, name, item, func, min, max, step, default, largeSte
       end
 
       if dir > 0 then
-        num = math.clamp(num + stepSize, min, max)
+         num = math.clamp(num + stepSize, min, max)
       else
-        num = math.clamp(num - stepSize, min, max)
+         num = math.clamp(num - stepSize, min, max)
       end
 
       nameJson[#nameJson].text = " [" .. num .. "]"
@@ -116,12 +116,27 @@ function lib.newNumber(self, name, item, func, min, max, step, default, largeSte
       slf:setTitle(toJson(nameJson))
 
       func(num, slf)
-    end)
-    :setOnLeftClick(function(slf)
+   end)
+   :setOnLeftClick(function(slf)
       func(num, slf)
-    end)
+   end)
 
-  return new
+   return {
+      getValue = function()
+         return num
+      end,
+      setValue = function(slf, newNum)
+         num = newNum
+         nameJson[#nameJson].text = " [" .. num .. "]"
+
+         slf:getAction():setTitle(toJson(nameJson))
+
+         func(num, slf)
+      end,
+      getAction = function()
+         return new
+      end
+   }
 end
 
 ---Creates a new button on the action wheel page
@@ -131,55 +146,55 @@ end
 ---@param func ActionWheelPlusPlus.colorFunc
 ---@return ActionWheelPlusPlus.Page
 function lib.newColor(self, name, item, func, default)
-  local new = self:newPage(name, item)
-  new.page:setAction(1, nil)
+   local new = self:newPage(name, item)
+   new.page:setAction(1, nil)
 
-  local color = default * 255
-  local colorTemp = color:copy()
+   local color = default * 255
+   local colorTemp = color:copy()
 
-  local function updateColor() end
+   local function updateColor() end
 
-  local r = new:newNumber("Red", "minecraft:red_dye", function(num, slf)
-    colorTemp.x = num
-    updateColor()
-    slf:setColor(colorTemp.x__ / 255)
-  end, 0, 255, 5, color.x, 25, 1):setColor(color.x__)
-  local g = new:newNumber("Green", "minecraft:green_dye", function(num, slf)
-    colorTemp.y = num
-    updateColor()
-    slf:setColor(colorTemp._y_ / 255)
-  end, 0, 255, 5, color.y, 25, 1):setColor(color._y_)
-  local b = new:newNumber("Blue", "minecraft:blue_dye", function(num, slf)
-    colorTemp.z = num
-    updateColor()
-    slf:setColor(colorTemp.__z / 255)
-  end, 0, 255, 5, color.z, 25, 1):setColor(color.__z)
+   local r = new:newNumber("Red", "minecraft:red_dye", function(num, slf)
+      colorTemp.x = num
+      updateColor()
+      slf:setColor(colorTemp.x__ / 255)
+   end, 0, 255, 5, color.x, 25, 1):getAction():setColor(color.x__)
+   local g = new:newNumber("Green", "minecraft:green_dye", function(num, slf)
+      colorTemp.y = num
+      updateColor()
+      slf:setColor(colorTemp._y_ / 255)
+   end, 0, 255, 5, color.y, 25, 1):getAction():setColor(color._y_)
+   local b = new:newNumber("Blue", "minecraft:blue_dye", function(num, slf)
+      colorTemp.z = num
+      updateColor()
+      slf:setColor(colorTemp.__z / 255)
+   end, 0, 255, 5, color.z, 25, 1):getAction():setColor(color.__z)
 
-  local cancel = new:newButton("Cancel", "minecraft:barrier", function()
-    colorTemp = color:copy()
-    updateColor()
-    r:setColor(color.x__ / 255)
-    g:setColor(color._y_ / 255)
-    b:setColor(color.__z / 255)
-    action_wheel:setPage(pageHistory[#pageHistory])
-  end):setColor(color)
-  local submit = new:newButton("Submit", "minecraft:white_dye", function()
-    color = colorTemp:copy()
-    cancel:setColor(color / 255)
-    func(color / 255, new)
-    new.action:setColor(color / 255)
-    action_wheel:setPage(pageHistory[#pageHistory])
-  end):setColor(colorTemp)
+   local cancel = new:newButton("Cancel", "minecraft:barrier", function()
+      colorTemp = color:copy()
+      updateColor()
+      r:setColor(color.x__ / 255)
+      g:setColor(color._y_ / 255)
+      b:setColor(color.__z / 255)
+      action_wheel:setPage(pageHistory[#pageHistory])
+   end):setColor(color)
+   local submit = new:newButton("Submit", "minecraft:white_dye", function()
+      color = colorTemp:copy()
+      cancel:setColor(color / 255)
+      func(color / 255, new)
+      new.action:setColor(color / 255)
+      action_wheel:setPage(pageHistory[#pageHistory])
+   end):setColor(colorTemp)
 
-  updateColor = function()
-    submit:setColor(colorTemp / 255)
-  end
+   updateColor = function()
+      submit:setColor(colorTemp / 255)
+   end
 
-  new.action:setColor(color / 255)
-  return new
+   new.action:setColor(color / 255)
+   return new
 end
 
- 
+
 ---Creates a new button on the action wheel page
 ---@param self ActionWheelPlusPlus.Page
 ---@param name string
@@ -188,46 +203,46 @@ end
 ---@param default string?
 ---@return ActionWheelPlusPlus.Page
 function lib.newText(self, name, item, func, default)
-  local isJson, nameJson = pcall(parseJson, name)
-  if not isJson then
-    nameJson = {{text = name}}
-  elseif not nameJson[1] then
-    nameJson = {nameJson}
-  end
-  local str = default or ""
-  table.insert(nameJson, {
-    text = " [" .. str .. "]",
-    color = "white"
-  })
+   local isJson, nameJson = pcall(parseJson, name)
+   if not isJson then
+      nameJson = {{text = name}}
+   elseif not nameJson[1] then
+      nameJson = {nameJson}
+   end
+   local str = default or ""
+   table.insert(nameJson, {
+      text = " [" .. str .. "]",
+      color = "white"
+   })
 
-  local new = self.page:newAction()
-    :setTitle(toJson(nameJson))
-    :setItem(item)
-    :setOnRightClick(function(slf)
+   local new = self.page:newAction()
+   :setTitle(toJson(nameJson))
+   :setItem(item)
+   :setOnRightClick(function(slf)
       func(str, slf)
-    end)
-    :setOnLeftClick(function(slf)
+   end)
+   :setOnLeftClick(function(slf)
       printJson(toJson({
-        {
-          text = "[ActionWheelPlusPlus] ",
-          color = "gray"
-        },
-        {
-          text = "Your next message in chat will be the new value",
-          color = "white"
-        }
+         {
+            text = "[ActionWheelPlusPlus] ",
+            color = "gray"
+         },
+         {
+            text = "Your next message in chat will be the new value",
+            color = "white"
+         }
       }))
       events.CHAT_SEND_MESSAGE:register(function(msg)
-        str = msg
-        func(str, slf)
-        nameJson[#nameJson].text = " [" .. str .. "]"
-        slf:setTitle(toJson(nameJson))
-        events.CHAT_SEND_MESSAGE:remove("ActionWheelPlusPlus.SET_TEXT")
-        return nil
+         str = msg
+         func(str, slf)
+         nameJson[#nameJson].text = " [" .. str .. "]"
+         slf:setTitle(toJson(nameJson))
+         events.CHAT_SEND_MESSAGE:remove("ActionWheelPlusPlus.SET_TEXT")
+         return nil
       end, "ActionWheelPlusPlus.SET_TEXT")
-    end)
+   end)
 
-  return new
+   return new
 end
 
 ---Creates a new button on the action wheel page
@@ -239,38 +254,38 @@ end
 ---@param default any|nil
 ---@return ActionWheelPlusPlus.Page
 function lib.newRadio(self, name, item, func, options, default)
-  local new = self:newPage(name, item)
-  new.page:setAction(1, nil)
+   local new = self:newPage(name, item)
+   new.page:setAction(1, nil)
 
-  local option = default or options[1]
+   local option = default or options[1]
 
-  local isJson, nameJson = pcall(parseJson, name)
-  if not isJson then
-    nameJson = {{text = name}}
-  elseif not nameJson[1] then
-    nameJson = {nameJson}
-  end
-  table.insert(nameJson, {
-    text = " [" .. tostring(option) .. "]",
-    color = "white"
-  })
+   local isJson, nameJson = pcall(parseJson, name)
+   if not isJson then
+      nameJson = {{text = name}}
+   elseif not nameJson[1] then
+      nameJson = {nameJson}
+   end
+   table.insert(nameJson, {
+      text = " [" .. tostring(option) .. "]",
+      color = "white"
+   })
 
-  new.action:setTitle(toJson(nameJson))
+   new.action:setTitle(toJson(nameJson))
 
-  for _, v in ipairs(options) do
-    new:newButton(tostring(v), "minecraft:slime_ball", function()
-      option = v
+   for _, v in ipairs(options) do
+      new:newButton(tostring(v), "minecraft:slime_ball", function()
+         option = v
+         func(option, new)
+         action_wheel:setPage(pageHistory[#pageHistory])
+         nameJson[#nameJson].text = " [" .. option .. "]"
+         new.action:setTitle(toJson(nameJson))
+      end)
+   end
+   new.action:setOnRightClick(function()
       func(option, new)
-      action_wheel:setPage(pageHistory[#pageHistory])
-      nameJson[#nameJson].text = " [" .. option .. "]"
-      new.action:setTitle(toJson(nameJson))
-    end)
-  end
-  new.action:setOnRightClick(function()
-    func(option, new)
-  end)
+   end)
 
-  return new
+   return new
 end
 
 ---Creates a new page
@@ -278,36 +293,36 @@ end
 ---@param name string
 ---@param item ItemStack|Minecraft.itemID
 function lib.newPage(self, name, item)
-  local new = action_wheel:newPage(name)
+   local new = action_wheel:newPage(name)
 
-  new:newAction()
-    :setItem("minecraft:arrow")
-    :setColor(1, 0.2, 0.2)
-    :setTitle(toJson({
+   new:newAction()
+   :setItem("minecraft:arrow")
+   :setColor(1, 0.2, 0.2)
+   :setTitle(toJson({
       text = "← Return",
       color = "#FF3636"
-    }))
-    :setOnLeftClick(function()
-       pageHistory[#pageHistory] = nil
+   }))
+   :setOnLeftClick(function()
+      pageHistory[#pageHistory] = nil
       action_wheel:setPage(pageHistory[#pageHistory])
-    end)
+   end)
 
-  local action = self.page:newAction()
-    :setTitle(name)
-    :setItem(item)
-    :setOnLeftClick(function()
+   local action = self.page:newAction()
+   :setTitle(name)
+   :setItem(item)
+   :setOnLeftClick(function()
       table.insert(pageHistory, self.page)
       action_wheel:setPage(new)
-    end)
+   end)
 
-  return setmetatable({action = action, page = new}, {__index = lib})
+   return setmetatable({action = action, page = new}, {__index = lib})
 end
 
 table.insert(pageHistory, mainPage)
 action_wheel:setPage(mainPage)
 
 return setmetatable({}, {
-  __index = lib,
-  page = mainPage
+   __index = lib,
+   page = mainPage
 })
 
