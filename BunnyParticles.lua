@@ -11,7 +11,7 @@ end
 local mdl = models:newPart("TKBunny$Particles", "WORLD")
 local particles = {}
 
-function events.WORLD_TICK()
+function events.TICK()
    for k, v in pairs(particles) do
       particles[k].life = v.life + 1
       particles[k].oldPos = v.pos
@@ -30,7 +30,7 @@ function events.WORLD_TICK()
       end
    end
 end
-function events.WORLD_RENDER(delta)
+function events.RENDER(delta)
    for _, v in pairs(particles) do
       local pos = math.lerp(v.oldPos, v.pos, delta)
       local rot = client.getCameraRot() - 180
